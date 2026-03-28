@@ -3,11 +3,15 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, String, Text, BigInteger, func
+from sqlalchemy import DateTime, String, Text, BigInteger, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
+
+# UUIDs reference auth-service tables (workspaces, users). No ORM ForeignKey here so
+# create_all does not require those tables in this service's metadata; membership
+# is still enforced in routes. DB-level FKs can be added in a shared migration later.
 
 
 class Document(Base):
@@ -16,12 +20,8 @@ class Document(Base):
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
-    workspace_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), index=True
-    )
-    created_by_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), index=True
-    )
+    workspace_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), index=True)
+    created_by_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), index=True)
     original_filename: Mapped[str] = mapped_column(String(512))
     content_type: Mapped[str | None] = mapped_column(String(255), nullable=True)
     size_bytes: Mapped[int] = mapped_column(BigInteger)
