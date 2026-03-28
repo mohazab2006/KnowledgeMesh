@@ -2,15 +2,16 @@
 
 ## Current milestone
 
-**MILESTONE 6 — UX polish + performance** (next)
+**MILESTONE 7 — Infra polish + docs** (next)
 
-Milestone 5 is **done**: **gateway** **`POST /v1/workspaces/{id}/query`** orchestrates **retrieval-service** (**OpenAI** query embed + **pgvector** similarity on **`document_chunks`**, JWT + workspace membership) and **llm-service** (**JSON** answer + **`cited_indices`**); **Query** UI calls the gateway with the active workspace.
+Milestone 6 is **done**: shared **`PageHeader`**, **`Skeleton`**, consistent **loading / error / retry** on dashboard metrics, documents, and query; **sidebar icons** and active states; **card** depth and subtle **page background**; **main** max width; sticky header shows **workspace** on primary routes (no duplicate titles with page headers); **Refresh** on documents; query **overlay** while running.
 
-## M6 goals
+Milestone 5 is **done**: **gateway** **`POST /v1/workspaces/{id}/query`** orchestrates retrieval + LLM; Query UI wired.
 
-- Tighten **loading / error / empty** patterns across app routes  
-- **Caching** or deduplication where it helps (e.g. dashboard stats, read-only lists)  
-- **Responsive** and visual polish where still rough  
+## M7 goals
+
+- Finalize **Compose / NGINX / env** documentation and demo readiness  
+- **Showcase-ready** README and architecture notes where gaps remain  
 
 ## Rules (project)
 
@@ -18,6 +19,6 @@ Milestone 5 is **done**: **gateway** **`POST /v1/workspaces/{id}/query`** orches
 - After **each completed milestone**: review diffs, clean dead code, update docs, **one clear commit**, **push to GitHub**.
 - Do not collapse services into one process; keep boundaries honest.
 
-## When M6 is complete
+## When M7 is complete
 
-Update this file to **MILESTONE 7**, summarize work, and give a commit message. Then infra/docs polish per `docs/milestones.md`.
+Update this file to **MILESTONE 8** (optional advanced backlog) or keep M7 closed; summarize work, commit, push.

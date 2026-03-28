@@ -27,14 +27,22 @@ export function Logo({
         className,
       )}
     >
-      <Image
-        src="/brand/knowledgemesh-logo.png"
-        alt="KnowledgeMesh"
-        width={280}
-        height={200}
-        className={imageClass}
-        priority
-      />
+      <span
+        className={cn(
+          "inline-flex items-center justify-center rounded-md bg-foreground",
+          variant === "hero" ? "p-3 sm:p-4" : "p-2 sm:p-2.5",
+          "dark:bg-transparent dark:p-0",
+        )}
+      >
+        <Image
+          src="/brand/mainlogo-KNM-removebg.png"
+          alt="KnowledgeMesh logo: geometric network connected to an open book"
+          width={512}
+          height={512}
+          className={imageClass}
+          priority
+        />
+      </span>
     </Link>
   );
 }

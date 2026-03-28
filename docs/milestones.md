@@ -8,7 +8,7 @@
 | 3 | Document management + upload | **Complete** | `documents` table, ingestion upload/list/detail, Redis enqueue stub, gateway split-routing, Documents UI |
 | 4 | Async ingestion pipeline | **Complete** | Worker `BRPOP`, PDF/text extract, chunk, OpenAI embed, `document_chunks` + pgvector, status + errors |
 | 5 | Retrieval + RAG query flow | **Complete** | Retrieval pgvector search + LLM JSON citations; gateway **`POST .../query`**; Query UI wired |
-| 6 | UX polish + performance | Planned | Loading/error/empty states, cache where useful, responsive polish |
+| 6 | UX polish + performance | **Complete** | PageHeader + skeletons; retry/error banners; sidebar icons; card/page chrome; query loading overlay; documents refresh |
 | 7 | Infra polish + docs | Planned | Finalize Compose/NGINX/env, showcase-ready documentation |
 | 8 | Optional advanced | Backlog | Streaming, reranking, Ollama, analytics, admin |
 
@@ -51,10 +51,17 @@
 
 ## Next up
 
-**Milestone 6:** UX polish + performance (loading/error/empty, caching where useful, responsive polish).
+**Milestone 7:** Infra polish + docs (Compose/NGINX/env, showcase documentation).
 
 ## Milestone 5 — decisions
 
 - **retrieval-service** uses the same **`DATABASE_URL`**, **`JWT_SECRET`**, and **OpenAI** embedding settings as the worker (**`text-embedding-3-small`**, **1536** dimensions) for query vectors; **pgvector** **`<=>`** orders nearest chunks per workspace with a **`documents`** join for filenames.  
 - **llm-service** exposes **`POST /v1/rag/complete`** with **`response_format=json_object`**; prompts enumerate context blocks **`[1]…[n]`** and expect **`answer`** + **`cited_indices`**.  
 - **gateway** implements **`POST /v1/workspaces/{id}/query`** before the workspace catch-all; **`RETRIEVAL_SERVICE_URL`** and **`LLM_SERVICE_URL`** in Compose.
+
+## Milestone 6 — decisions
+
+- **Page titles** live in route content via **`PageHeader`**; the app shell sticky bar emphasizes **active workspace** (and a title only for routes without a page header, e.g. **New workspace**).  
+- **Loading**: **`Skeleton`** for dashboard metrics and document table first paint; **`LoadingState`** for workspace bootstrap; **query** uses an in-card **backdrop + Spinner** while the RAG request runs.  
+- **Errors**: **`ErrorState`** + **Try again** on metrics and documents list; query errors are dismissible inline.  
+- **Visual**: **`rounded-xl`** cards, light **radial accent** on `body`, **`max-w-6xl`** on main column; sidebar **icons** and **ring** on active nav.

@@ -89,3 +89,11 @@ Format: short ADR-style entries. New decisions are appended with a date.
 **Context:** Users need to recover access without database surgery; email is the standard channel but local dev often has no mail server.  
 **Decision:** **`password_reset_tokens`** table stores **SHA-256** of a random token, **`POST /v1/auth/forgot-password`** always returns the same generic message shape, **`POST /v1/auth/reset-password`** consumes the token. **Optional SMTP** (`SMTP_*` + **`FRONTEND_PUBLIC_URL`**) sends a link to **`/reset-password?token=`**. When SMTP is unset, **`PASSWORD_RESET_RETURN_TOKEN=true`** may include **`dev_reset_token`** in the JSON response (disabled in production).  
 **Consequences:** Dev mode can leak account existence via **`dev_reset_token`** presence—acceptable only when the flag is explicitly on. Operators must set **`PASSWORD_RESET_RETURN_TOKEN=false`** and configure SMTP for real deployments.
+
+---
+
+### ADR-012 — App shell vs page titles (Milestone 6) (2026-03-28)
+
+**Context:** Duplicate headings (“Documents” in the sticky bar and again in the page) cluttered the UI.  
+**Decision:** Primary routes (**dashboard**, **documents**, **query**) use **`PageHeader`** for the visible title; the sticky bar shows **active workspace** name + role (and a page title only for **New workspace** and similar routes without a page header).  
+**Consequences:** Contributors adding app routes should either use **`PageHeader`** or register a **`headerTitles`** entry in **`app-shell.tsx`**.

@@ -13,10 +13,15 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/ui/error-state";
+import { LoadingState } from "@/components/ui/loading-state";
+import { PageHeader } from "@/components/app/page-header";
+import { Spinner } from "@/components/ui/spinner";
 import { useWorkspace } from "@/contexts/workspace-context";
 import { ApiError, apiFetch } from "@/lib/api";
 import type { QueryResponse } from "@/types/api";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 export function QueryPageClient() {
   const { active, activeId, loading: wsLoading } = useWorkspace();
@@ -57,9 +62,7 @@ export function QueryPageClient() {
   };
 
   if (wsLoading) {
-    return (
-      <p className="text-sm text-muted-foreground">Loading workspace…</p>
-    );
+    return <LoadingState message="Loading workspace…" />;
   }
 
   if (!activeId || !active) {
@@ -77,22 +80,32 @@ export function QueryPageClient() {
   }
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-          Query
-        </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Answers use retrieval over indexed chunks in{" "}
-          <span className="text-foreground">{active.name}</span>, then the LLM
-          with citations. Requires{" "}
-          <code className="text-xs">OPENAI_API_KEY</code> on retrieval and LLM
-          services.
-        </p>
-      </div>
+    <div className="space-y-10">
+      <PageHeader
+        title="Query"
+        description={
+          <>
+            Retrieval + LLM over indexed chunks in{" "}
+            <span className="text-foreground">{active.name}</span>. Requires{" "}
+            <code className="rounded bg-muted px-1 py-0.5 text-xs">
+              OPENAI_API_KEY
+            </code>{" "}
+            on retrieval and LLM services.
+          </>
+        }
+      />
 
       <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
-        <Card>
+        <Card className="relative overflow-hidden border-border/80">
+          {loading ? (
+            <div
+              className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-background/80 backdrop-blur-[2px]"
+              aria-busy
+            >
+              <Spinner className="size-10" aria-label="Running query" />
+              <p className="text-sm text-muted-foreground">Retrieving context…</p>
+            </div>
+          ) : null}
           <CardHeader>
             <CardTitle>Ask the mesh</CardTitle>
             <CardDescription>
@@ -100,11 +113,22 @@ export function QueryPageClient() {
             </CardDescription>
           </CardHeader>
           <form onSubmit={(e) => void onSubmit(e)}>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-4">
               {error ? (
-                <p className="text-sm text-destructive" role="alert">
-                  {error}
-                </p>
+                <ErrorState
+                  title="Query failed"
+                  message={error}
+                  action={
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setError(null)}
+                    >
+                      Dismiss
+                    </Button>
+                  }
+                />
               ) : null}
               <div className="space-y-2">
                 <Label htmlFor="query">Question</Label>
@@ -130,14 +154,19 @@ export function QueryPageClient() {
                 Clear
               </Button>
               <Button type="submit" disabled={loading || !question.trim()}>
-                {loading ? "Running…" : "Run query"}
+                Run query
               </Button>
             </CardFooter>
           </form>
           {result ? (
-            <div className="border-t border-border px-6 py-4">
-              <h3 className="text-sm font-medium text-foreground">Answer</h3>
-              <div className="mt-2 space-y-3 text-sm leading-relaxed text-muted-foreground">
+            <div className="border-t border-border bg-muted/15 px-6 py-5">
+              <h3 className="text-sm font-semibold text-foreground">Answer</h3>
+              <div
+                className={cn(
+                  "mt-3 space-y-3 text-sm leading-relaxed text-muted-foreground",
+                  "rounded-lg border border-border/60 bg-card/50 p-4",
+                )}
+              >
                 {result.answer.split(/\n{2,}/).map((para, i) => (
                   <p key={i} className="whitespace-pre-wrap">
                     {para}
@@ -152,7 +181,7 @@ export function QueryPageClient() {
           ) : null}
         </Card>
 
-        <Card className="h-fit lg:sticky lg:top-24">
+        <Card className="h-fit border-border/80 lg:sticky lg:top-24">
           <CardHeader>
             <CardTitle className="text-base">Sources</CardTitle>
             <CardDescription>
@@ -171,7 +200,7 @@ export function QueryPageClient() {
                 {result.citations.map((c, i) => (
                   <li
                     key={`${c.chunk_id}-${i}`}
-                    className="rounded-md border border-border bg-muted/20 p-3"
+                    className="rounded-lg border border-border/70 bg-muted/20 p-3"
                   >
                     <p className="font-medium text-foreground">
                       {c.document_title}

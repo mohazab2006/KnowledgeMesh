@@ -14,7 +14,7 @@ export function Spinner({
       role="status"
       aria-label={ariaLabel}
       className={cn(
-        "size-8 animate-spin rounded-full border-2 border-muted border-t-foreground",
+        "size-8 shrink-0 animate-spin rounded-full border-2 border-muted border-t-foreground",
         className,
       )}
     />

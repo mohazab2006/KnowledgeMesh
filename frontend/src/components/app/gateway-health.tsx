@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ErrorState } from "@/components/ui/error-state";
+import { Spinner } from "@/components/ui/spinner";
 
 export function GatewayHealth() {
   const [state, setState] = useState<"loading" | "ok" | "error">("loading");
@@ -24,7 +25,10 @@ export function GatewayHealth() {
 
   if (state === "loading") {
     return (
-      <p className="text-sm text-muted-foreground">Checking gateway…</p>
+      <div className="flex items-center gap-3 text-sm text-muted-foreground">
+        <Spinner className="size-5" aria-label="Checking gateway" />
+        Checking gateway…
+      </div>
     );
   }
   if (state === "error") {

@@ -2,8 +2,14 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/ui/error-state";
+import { LoadingState } from "@/components/ui/loading-state";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
+import { cn } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -90,6 +96,34 @@ function formatSize(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function DocumentsTableSkeleton() {
+  return (
+    <div className="overflow-hidden rounded-xl border border-border/80">
+      <div className="grid grid-cols-[1fr_5rem_6.5rem_9rem_5rem] gap-3 border-b border-border bg-muted/25 px-4 py-3 sm:grid-cols-[1fr_6rem_7rem_10rem_6rem] sm:px-5">
+        <Skeleton className="h-4 w-16" />
+        <Skeleton className="h-4 w-10" />
+        <Skeleton className="h-4 w-14" />
+        <Skeleton className="h-4 w-20" />
+        <Skeleton className="h-4 w-14 justify-self-end" />
+      </div>
+      <ul className="divide-y divide-border/80">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <li
+            key={i}
+            className="grid grid-cols-[1fr_5rem_6.5rem_9rem_5rem] items-center gap-3 px-4 py-3.5 sm:grid-cols-[1fr_6rem_7rem_10rem_6rem] sm:px-5"
+          >
+            <Skeleton className="h-4 max-w-[min(100%,220px)]" />
+            <Skeleton className="h-4 w-12" />
+            <Skeleton className="h-5 w-16 rounded-full" />
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-8 w-14 justify-self-end rounded-md" />
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
 export function DocumentsClient() {
@@ -244,9 +278,7 @@ export function DocumentsClient() {
   );
 
   if (wsLoading) {
-    return (
-      <p className="text-sm text-muted-foreground">Loading workspace…</p>
-    );
+    return <LoadingState message="Loading workspace…" />;
   }
 
   if (!activeId || !active) {
@@ -266,49 +298,67 @@ export function DocumentsClient() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            Documents
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Uploads for <span className="text-foreground">{active.name}</span>
-            . Allowed types: PDF and UTF‑8 text-friendly files (for example{" "}
+      <PageHeader
+        title="Documents"
+        description={
+          <>
+            Uploads for{" "}
+            <span className="text-foreground">{active.name}</span>. PDF and
+            UTF‑8–friendly types (
             <span className="text-foreground">.md</span>,{" "}
             <span className="text-foreground">.csv</span>,{" "}
             <span className="text-foreground">.json</span>,{" "}
-            <span className="text-foreground">.html</span>). Click a name to
+            <span className="text-foreground">.html</span>, …). Click a name to
             quick-view when supported.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <input
-            ref={inputRef}
-            type="file"
-            accept={UPLOAD_ACCEPT}
-            className="sr-only"
-            onChange={onFileChange}
-            aria-hidden
-          />
-          <Button
-            type="button"
-            onClick={onPickFile}
-            disabled={uploading}
-          >
-            {uploading ? "Uploading…" : "Upload"}
-          </Button>
-        </div>
-      </div>
+          </>
+        }
+        aside={
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              ref={inputRef}
+              type="file"
+              accept={UPLOAD_ACCEPT}
+              className="sr-only"
+              onChange={onFileChange}
+              aria-hidden
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => void load()}
+              disabled={loading || uploading}
+            >
+              {loading ? "Refreshing…" : "Refresh"}
+            </Button>
+            <Button type="button" onClick={onPickFile} disabled={uploading}>
+              {uploading ? "Uploading…" : "Upload"}
+            </Button>
+          </div>
+        }
+      />
 
       {error ? (
-        <p className="text-sm text-destructive" role="alert">
-          {error}
-        </p>
+        <ErrorState
+          title="Could not load documents"
+          message={error}
+          action={
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={() => void load()}
+              disabled={loading}
+            >
+              {loading ? "Retrying…" : "Try again"}
+            </Button>
+          }
+        />
       ) : null}
 
-      {loading ? (
-        <p className="text-sm text-muted-foreground">Loading documents…</p>
-      ) : docs.length === 0 ? (
+      {!error && loading && docs.length === 0 ? (
+        <DocumentsTableSkeleton />
+      ) : null}
+      {!error && !loading && docs.length === 0 ? (
         <EmptyState
           icon={<DocIcon />}
           title="No documents yet"
@@ -324,8 +374,14 @@ export function DocumentsClient() {
             </Button>
           }
         />
-      ) : (
-        <div className="rounded-lg border border-border">
+      ) : null}
+      {!error && docs.length > 0 ? (
+        <div
+          className={cn(
+            "overflow-hidden rounded-xl border border-border/80 transition-opacity",
+            loading && "pointer-events-none opacity-50",
+          )}
+        >
           <Table>
             <TableHeader>
               <TableRow>
@@ -394,7 +450,7 @@ export function DocumentsClient() {
             </TableBody>
           </Table>
         </div>
-      )}
+      ) : null}
 
       {previewModal.phase !== "closed" ? (
         <div
@@ -411,7 +467,7 @@ export function DocumentsClient() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="doc-preview-title"
-            className="relative z-10 flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-lg border border-border bg-background shadow-lg"
+            className="relative z-10 flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-border/80 bg-background shadow-lg"
           >
             <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-3">
               <p
@@ -431,9 +487,10 @@ export function DocumentsClient() {
             </div>
             <div className="min-h-0 flex-1 overflow-hidden p-3">
               {previewModal.phase === "loading" ? (
-                <p className="p-8 text-center text-sm text-muted-foreground">
-                  Loading preview…
-                </p>
+                <div className="flex flex-col items-center justify-center gap-4 py-16 text-muted-foreground">
+                  <Spinner className="size-10" aria-label="Loading preview" />
+                  <p className="text-sm">Loading preview…</p>
+                </div>
               ) : null}
               {previewModal.phase === "error" ? (
                 <p className="p-8 text-center text-sm text-destructive">

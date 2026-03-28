@@ -11,19 +11,17 @@ import { cn } from "@/lib/utils";
 import { AppHeader } from "@/components/app/header";
 import { Sidebar } from "@/components/app/sidebar";
 
-const titles: Record<string, string> = {
-  "/dashboard": "Dashboard",
-  "/documents": "Documents",
-  "/query": "Query",
+/** Shown in the sticky bar only when the page does not use its own `PageHeader` title. */
+const headerTitles: Record<string, string> = {
   "/workspaces/new": "New workspace",
 };
 
 function titleForPath(pathname: string) {
-  if (titles[pathname]) return titles[pathname];
-  for (const [prefix, label] of Object.entries(titles)) {
+  if (headerTitles[pathname]) return headerTitles[pathname];
+  for (const [prefix, label] of Object.entries(headerTitles)) {
     if (pathname.startsWith(`${prefix}/`)) return label;
   }
-  return "KnowledgeMesh";
+  return "";
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -62,7 +60,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col md:min-h-full">
         <AppHeader title={title} onMenuClick={() => setMobileNavOpen(true)} />
-        <main className="flex-1 px-4 py-6 sm:px-6 md:px-10 md:py-8">
+        <main className="mx-auto flex w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 md:px-10 md:py-10">
           {children}
         </main>
       </div>

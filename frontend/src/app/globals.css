@@ -58,7 +58,22 @@
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
+  background-image: radial-gradient(
+    ellipse 120% 80% at 50% -20%,
+    color-mix(in oklab, var(--accent) 8%, transparent),
+    transparent 55%
+  );
   color: var(--foreground);
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-image: radial-gradient(
+      ellipse 100% 60% at 50% -15%,
+      color-mix(in oklab, var(--accent) 12%, transparent),
+      transparent 50%
+    );
+  }
 }

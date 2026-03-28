@@ -26,15 +26,21 @@ export function AppHeader({ title, onMenuClick }: AppHeaderProps) {
         <MenuIcon />
       </Button>
       <div className="min-w-0 flex-1">
-        <h1 className="truncate text-sm font-semibold text-foreground md:text-base">
-          {title}
-        </h1>
+        {title ? (
+          <h1 className="truncate text-sm font-semibold text-foreground md:text-base">
+            {title}
+          </h1>
+        ) : (
+          <p className="truncate text-sm font-semibold text-foreground md:text-base">
+            {active ? active.name : loading ? "Loading…" : "KnowledgeMesh"}
+          </p>
+        )}
         <p className="truncate text-xs text-muted-foreground">
           {active ? (
             <>
-              {active.name}
-              <span className="text-muted-foreground/70"> · </span>
               <span className="capitalize">{active.role}</span>
+              <span className="text-muted-foreground/70"> · </span>
+              <span>active workspace</span>
             </>
           ) : loading ? (
             "Loading workspaces…"
@@ -50,8 +56,9 @@ export function AppHeader({ title, onMenuClick }: AppHeaderProps) {
         <select
           id="workspace-select"
           className={cn(
-            "h-9 max-w-[200px] cursor-pointer truncate rounded-md border border-border bg-card px-2 text-xs font-medium text-foreground shadow-sm",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:max-w-[240px]",
+            "h-9 max-w-[200px] cursor-pointer truncate rounded-lg border border-border/80 bg-card px-3 text-xs font-medium text-foreground",
+            "shadow-sm transition-[box-shadow,border-color] focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+            "disabled:cursor-not-allowed disabled:opacity-50 md:max-w-[240px]",
           )}
           value={active?.id ?? ""}
           disabled={loading || workspaces.length === 0}

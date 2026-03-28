@@ -27,10 +27,11 @@ End-state we’re building toward (see milestones for what’s live today):
 
 ## Where we are now
 
-This README describes the **whole product**, not a single milestone. **Milestones 0–5** are done through **async ingestion** plus **RAG query**: **gateway** **`POST /v1/workspaces/{id}/query`** orchestrates **retrieval-service** (query embedding + **pgvector** search) and **llm-service** (citation-aware JSON answers). Details: [`docs/milestones.md`](docs/milestones.md).
+This README describes the **whole product**, not a single milestone. **Milestones 0–6** are done through **async ingestion**, **RAG query**, and **polished app UX** (loading/error patterns, sidebar + page chrome). Details: [`docs/milestones.md`](docs/milestones.md).
 
 ## Engineers: go deeper
 
+- [`docs/how-to-run.md`](docs/how-to-run.md) — run the app with Docker Compose  
 - [`docs/repository-structure.md`](docs/repository-structure.md) — services, data flow, repo map  
 - [`docs/architecture.md`](docs/architecture.md) — architecture notes  
 - [`docs/api-overview.md`](docs/api-overview.md) — API direction  
