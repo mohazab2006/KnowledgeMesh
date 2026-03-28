@@ -14,6 +14,7 @@ Public HTTP entry (via NGINX): **`/api/*`** → **gateway service** (prefix stri
 | POST | `/v1/workspaces` | Auth | Create workspace (caller = owner) |
 | GET | `/v1/workspaces/{id}` | Auth | Workspace detail if member |
 | GET | `/v1/workspaces/{id}/documents` | Ingestion (via gateway) | List documents in workspace |
+| GET | `/v1/workspaces/{id}/documents/stats` | Ingestion (via gateway) | Workspace document aggregates (`indexed_count`, `processing_count`; `queries_24h` reserved) |
 | POST | `/v1/workspaces/{id}/documents` | Ingestion (via gateway) | Multipart upload (`file` field); allowed types: PDF + text-friendly formats (see ingestion); enqueues Redis job |
 | GET | `/v1/workspaces/{id}/documents/{document_id}` | Ingestion (via gateway) | Document metadata |
 | GET | `/v1/workspaces/{id}/documents/{document_id}/file` | Ingestion (via gateway) | Stream original bytes (`Content-Disposition: inline`; member only) |

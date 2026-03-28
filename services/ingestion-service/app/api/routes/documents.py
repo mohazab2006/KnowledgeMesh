@@ -9,14 +9,14 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse
-from sqlalchemy import select, text
+from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.deps import assert_workspace_member, get_current_user_id
 from app.db.session import get_db
 from app.models.document import Document
-from app.schemas.document import DocumentOut
+from app.schemas.document import DocumentOut, WorkspaceDocumentStatsOut
 
 router = APIRouter()
 
@@ -74,6 +74,39 @@ async def list_documents(
         .order_by(Document.created_at.desc())
     )
     return list(result.all())
+
+
+_PIPELINE_STATUSES = ("queued", "processing", "uploaded")
+
+
+@router.get("/stats", response_model=WorkspaceDocumentStatsOut)
+async def workspace_document_stats(
+    workspace_id: UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
+) -> WorkspaceDocumentStatsOut:
+    await assert_workspace_member(db, workspace_id, user_id)
+    indexed = await db.scalar(
+        select(func.count())
+        .select_from(Document)
+        .where(
+            Document.workspace_id == workspace_id,
+            Document.status == "indexed",
+        )
+    )
+    processing = await db.scalar(
+        select(func.count())
+        .select_from(Document)
+        .where(
+            Document.workspace_id == workspace_id,
+            Document.status.in_(_PIPELINE_STATUSES),
+        )
+    )
+    return WorkspaceDocumentStatsOut(
+        indexed_count=int(indexed or 0),
+        processing_count=int(processing or 0),
+        queries_24h=None,
+    )
 
 
 def _response_media_type(doc: Document) -> str:

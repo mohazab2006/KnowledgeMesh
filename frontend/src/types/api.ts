@@ -18,6 +18,13 @@ export type WorkspaceOut = {
   created_at: string;
 };
 
+export type WorkspaceDocumentStatsOut = {
+  indexed_count: number;
+  processing_count: number;
+  /** When null, the API does not track query volume yet. */
+  queries_24h: number | null;
+};
+
 export type DocumentOut = {
   id: string;
   workspace_id: string;

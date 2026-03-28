@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Badge } from "@/components/ui/badge";
 import { GatewayHealth } from "@/components/app/gateway-health";
+import { DashboardMetrics } from "./dashboard-metrics";
 import {
   Card,
   CardContent,
@@ -22,53 +23,14 @@ export default function DashboardPage() {
             Overview
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Live metrics will connect to the API gateway in later milestones.
+            Document counts load from ingestion for the workspace you have
+            selected. Query totals are not recorded yet.
           </p>
         </div>
         <Badge variant="accent">Milestone 1 · UI foundation</Badge>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Documents</CardDescription>
-            <CardTitle className="text-3xl font-semibold tabular-nums">
-              —
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Indexed files across the active workspace.
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Processing</CardDescription>
-            <CardTitle className="text-3xl font-semibold tabular-nums">
-              —
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Jobs in queue or worker pipeline.
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="sm:col-span-2 lg:col-span-1">
-          <CardHeader className="pb-2">
-            <CardDescription>Queries (24h)</CardDescription>
-            <CardTitle className="text-3xl font-semibold tabular-nums">
-              —
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Citation-backed answers served from retrieval + LLM.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      <DashboardMetrics />
 
       <Card className="max-w-2xl">
         <CardHeader>

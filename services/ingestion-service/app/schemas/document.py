@@ -4,6 +4,14 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict
 
 
+class WorkspaceDocumentStatsOut(BaseModel):
+    """Aggregates for dashboard overview (active workspace)."""
+
+    indexed_count: int
+    processing_count: int
+    queries_24h: int | None = None
+
+
 class DocumentOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
