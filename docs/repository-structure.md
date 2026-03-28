@@ -73,6 +73,14 @@ Retrieval and generation are separate services so scaling, caching, and provider
 - **Path-based routing** at NGINX for one browser origin with multiple backends.
 - **Document lifecycle:** `uploaded` → `queued` → `processing` → `indexed` / `failed`.
 
+## Frontend layout (`frontend/src/`)
+
+- **`app/`** — App Router: `(marketing)/` (landing), `(auth)/` (login, register), `(app)/` (shell + dashboard, documents, query).  
+- **`components/ui/`** — Design-system primitives: `Button`, `Input`, `Label`, `Textarea`, `Card`, `Table`, `Badge`, `Spinner`, `EmptyState`, `LoadingState`, `ErrorState`.  
+- **`components/app/`** — Shell: `AppShell`, `Sidebar`, `AppHeader`, `Logo`, `QueryForm`.  
+- **`components/auth/`** — Client auth forms (Milestone 2 will connect to APIs).  
+- **`lib/`** — `cn()` helper, `nav` config.
+
 ## Repository layout
 
 ```

@@ -13,8 +13,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "KnowledgeMesh",
-  description: "Distributed RAG platform — workspace documents, semantic retrieval, citation-backed answers.",
+  title: {
+    default: "KnowledgeMesh",
+    template: "%s · KnowledgeMesh",
+  },
+  description:
+    "Distributed RAG platform — workspace documents, semantic retrieval, citation-backed answers.",
 };
 
 export default function RootLayout({
