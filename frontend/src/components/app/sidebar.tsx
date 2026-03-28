@@ -56,7 +56,7 @@ export function Sidebar({ onNavigate, className }: SidebarProps) {
             >
               <NavIcon
                 className={cn(
-                  "size-[1.125rem] shrink-0",
+                  "size-4.5 shrink-0",
                   active ? "text-foreground" : "text-muted-foreground",
                 )}
               />
@@ -73,7 +73,7 @@ export function Sidebar({ onNavigate, className }: SidebarProps) {
               "bg-muted text-foreground shadow-sm ring-1 ring-border/70",
           )}
         >
-          <IconPlusWorkspace className="size-[1.125rem] shrink-0" />
+          <IconPlusWorkspace className="size-4.5 shrink-0" />
           New workspace
         </Link>
       </nav>

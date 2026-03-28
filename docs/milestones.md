@@ -9,7 +9,7 @@
 | 4 | Async ingestion pipeline | **Complete** | Worker `BRPOP`, PDF/text extract, chunk, OpenAI embed, `document_chunks` + pgvector, status + errors |
 | 5 | Retrieval + RAG query flow | **Complete** | Retrieval pgvector search + LLM JSON citations; gateway **`POST .../query`**; Query UI wired |
 | 6 | UX polish + performance | **Complete** | PageHeader + skeletons; retry/error banners; sidebar icons; card/page chrome; query loading overlay; documents refresh |
-| 7 | Infra polish + docs | Planned | Finalize Compose/NGINX/env, showcase-ready documentation |
+| 7 | Infra polish + docs | **Complete** | Compose health-gated startup; NGINX + `.env.example` + how-to-run; README/architecture/repo docs aligned |
 | 8 | Optional advanced | Backlog | Streaming, reranking, Ollama, analytics, admin |
 
 ## Milestone 0 — decisions
@@ -51,7 +51,7 @@
 
 ## Next up
 
-**Milestone 7:** Infra polish + docs (Compose/NGINX/env, showcase documentation).
+**Milestone 8:** Optional advanced backlog (streaming, reranking, Ollama, analytics, admin).
 
 ## Milestone 5 — decisions
 
@@ -65,3 +65,9 @@
 - **Loading**: **`Skeleton`** for dashboard metrics and document table first paint; **`LoadingState`** for workspace bootstrap; **query** uses an in-card **backdrop + Spinner** while the RAG request runs.  
 - **Errors**: **`ErrorState`** + **Try again** on metrics and documents list; query errors are dismissible inline.  
 - **Visual**: **`rounded-xl`** cards, light **radial accent** on `body`, **`max-w-6xl`** on main column; sidebar **icons** and **ring** on active nav.
+
+## Milestone 7 — decisions
+
+- **Compose** uses a shared **`x-fastapi-healthcheck`** anchor (**`urllib.request`** to **`/health`**) on Python services plus **Node `fetch`** on **frontend** and **`wget`** on **NGINX**; **gateway** / **frontend** / **nginx** use **`depends_on: condition: service_healthy`** to reduce cold **502**s.  
+- **Service order** in the compose file follows dependency layers (data → core APIs → worker parallel to gateway chain → edge).  
+- **Documentation:** root **README** is the recruiter-facing product summary; **`.env.example`** and **`docs/how-to-run.md`** carry operator detail; **`infra/nginx/nginx.conf`** documents routing and upload size inline.

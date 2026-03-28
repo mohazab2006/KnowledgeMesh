@@ -2,16 +2,18 @@
 
 ## Current milestone
 
-**MILESTONE 7 — Infra polish + docs** (next)
+**MILESTONE 8 — Optional advanced** (backlog / pick items as needed)
 
-Milestone 6 is **done**: shared **`PageHeader`**, **`Skeleton`**, consistent **loading / error / retry** on dashboard metrics, documents, and query; **sidebar icons** and active states; **card** depth and subtle **page background**; **main** max width; sticky header shows **workspace** on primary routes (no duplicate titles with page headers); **Refresh** on documents; query **overlay** while running.
+Milestone 7 is **done**: **Compose** health-gated startup (**`x-fastapi-healthcheck`**, frontend + NGINX probes, **`depends_on: service_healthy`**); **`infra/nginx/nginx.conf`** documented; **`.env.example`** and **`docs/how-to-run.md`** tightened; **README**, **`docs/architecture.md`**, **`docs/repository-structure.md`**, **`docs/api-overview.md`** aligned for showcase review.
 
-Milestone 5 is **done**: **gateway** **`POST /v1/workspaces/{id}/query`** orchestrates retrieval + LLM; Query UI wired.
+Milestone 6 is **done**: **PageHeader**, **Skeleton**, loading/error patterns, sidebar polish, query overlay.
 
-## M7 goals
+Milestone 5 is **done**: gateway **`POST /v1/workspaces/{id}/query`**, retrieval + LLM, Query UI.
 
-- Finalize **Compose / NGINX / env** documentation and demo readiness  
-- **Showcase-ready** README and architecture notes where gaps remain  
+## M8 direction (when you choose to implement)
+
+- Streaming answers, reranking, optional **Ollama** / local LLM path  
+- Query **analytics**, admin surfaces, stronger **DB least-privilege** per service  
 
 ## Rules (project)
 
@@ -19,6 +21,6 @@ Milestone 5 is **done**: **gateway** **`POST /v1/workspaces/{id}/query`** orches
 - After **each completed milestone**: review diffs, clean dead code, update docs, **one clear commit**, **push to GitHub**.
 - Do not collapse services into one process; keep boundaries honest.
 
-## When M7 is complete
+## When M8 items ship
 
-Update this file to **MILESTONE 8** (optional advanced backlog) or keep M7 closed; summarize work, commit, push.
+Update `docs/milestones.md` and this file; summarize, commit, push.

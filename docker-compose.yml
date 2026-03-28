@@ -1,3 +1,18 @@
+# KnowledgeMesh — local full stack.
+# Entry: http://localhost:${HTTP_PORT:-8080} (NGINX → Next.js + /api → gateway).
+# Volumes: pgdata (Postgres), ingestion_uploads (ingestion RW, worker RO).
+
+x-fastapi-healthcheck: &fastapi_healthcheck
+  test:
+    [
+      "CMD-SHELL",
+      'python -c "import urllib.request; urllib.request.urlopen(\"http://127.0.0.1:8000/health\")"',
+    ]
+  interval: 10s
+  timeout: 5s
+  retries: 5
+  start_period: 45s
+
 services:
   postgres:
     image: pgvector/pgvector:pg16
@@ -25,32 +40,6 @@ services:
       timeout: 3s
       retries: 5
 
-  gateway-service:
-    build:
-      context: .
-      dockerfile: services/gateway-service/Dockerfile
-    environment:
-      ENVIRONMENT: ${ENVIRONMENT:-development}
-      AUTH_SERVICE_URL: http://auth-service:8000
-      INGESTION_SERVICE_URL: http://ingestion-service:8000
-      RETRIEVAL_SERVICE_URL: http://retrieval-service:8000
-      LLM_SERVICE_URL: http://llm-service:8000
-    ports:
-      - "${GATEWAY_PORT:-8000}:8000"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      auth-service:
-        condition: service_started
-      ingestion-service:
-        condition: service_started
-      retrieval-service:
-        condition: service_started
-      llm-service:
-        condition: service_started
-
   auth-service:
     build:
       context: .
@@ -70,6 +59,42 @@ services:
       SMTP_USE_SSL: ${SMTP_USE_SSL:-false}
     ports:
       - "${AUTH_SERVICE_PORT:-8001}:8000"
+    healthcheck:
+      <<: *fastapi_healthcheck
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  llm-service:
+    build:
+      context: .
+      dockerfile: services/llm-service/Dockerfile
+    environment:
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    ports:
+      - "${LLM_SERVICE_PORT:-8004}:8000"
+    healthcheck:
+      <<: *fastapi_healthcheck
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  retrieval-service:
+    build:
+      context: .
+      dockerfile: services/retrieval-service/Dockerfile
+    environment:
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env (long random string)}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    ports:
+      - "${RETRIEVAL_SERVICE_PORT:-8003}:8000"
+    healthcheck:
+      <<: *fastapi_healthcheck
     depends_on:
       postgres:
         condition: service_healthy
@@ -90,42 +115,14 @@ services:
       - "${INGESTION_SERVICE_PORT:-8002}:8000"
     volumes:
       - ingestion_uploads:/data/uploads
+    healthcheck:
+      <<: *fastapi_healthcheck
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
       auth-service:
-        condition: service_started
-
-  retrieval-service:
-    build:
-      context: .
-      dockerfile: services/retrieval-service/Dockerfile
-    environment:
-      ENVIRONMENT: ${ENVIRONMENT:-development}
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env (long random string)}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-    ports:
-      - "${RETRIEVAL_SERVICE_PORT:-8003}:8000"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-
-  llm-service:
-    build:
-      context: .
-      dockerfile: services/llm-service/Dockerfile
-    environment:
-      ENVIRONMENT: ${ENVIRONMENT:-development}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-    ports:
-      - "${LLM_SERVICE_PORT:-8004}:8000"
-    depends_on:
-      redis:
         condition: service_healthy
 
   worker-service:
@@ -143,13 +140,43 @@ services:
       - "${WORKER_SERVICE_PORT:-8005}:8000"
     volumes:
       - ingestion_uploads:/data/uploads:ro
+    healthcheck:
+      <<: *fastapi_healthcheck
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
       ingestion-service:
-        condition: service_started
+        condition: service_healthy
+
+  gateway-service:
+    build:
+      context: .
+      dockerfile: services/gateway-service/Dockerfile
+    environment:
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      AUTH_SERVICE_URL: http://auth-service:8000
+      INGESTION_SERVICE_URL: http://ingestion-service:8000
+      RETRIEVAL_SERVICE_URL: http://retrieval-service:8000
+      LLM_SERVICE_URL: http://llm-service:8000
+    ports:
+      - "${GATEWAY_PORT:-8000}:8000"
+    healthcheck:
+      <<: *fastapi_healthcheck
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+      ingestion-service:
+        condition: service_healthy
+      retrieval-service:
+        condition: service_healthy
+      llm-service:
+        condition: service_healthy
 
   frontend:
     build:
@@ -161,8 +188,19 @@ services:
       NODE_ENV: production
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://127.0.0.1:3000').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\"",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     depends_on:
-      - gateway-service
+      gateway-service:
+        condition: service_healthy
 
   nginx:
     image: nginx:1.27-alpine
@@ -170,9 +208,21 @@ services:
       - "${HTTP_PORT:-8080}:80"
     volumes:
       - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- http://127.0.0.1/ >/dev/null 2>&1 || exit 1",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
     depends_on:
-      - frontend
-      - gateway-service
+      frontend:
+        condition: service_healthy
+      gateway-service:
+        condition: service_healthy
 
 volumes:
   pgdata:

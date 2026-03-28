@@ -97,3 +97,11 @@ Format: short ADR-style entries. New decisions are appended with a date.
 **Context:** Duplicate headings (“Documents” in the sticky bar and again in the page) cluttered the UI.  
 **Decision:** Primary routes (**dashboard**, **documents**, **query**) use **`PageHeader`** for the visible title; the sticky bar shows **active workspace** name + role (and a page title only for **New workspace** and similar routes without a page header).  
 **Consequences:** Contributors adding app routes should either use **`PageHeader`** or register a **`headerTitles`** entry in **`app-shell.tsx`**.
+
+---
+
+### ADR-013 — Health-gated Compose startup (Milestone 7) (2026-03-28)
+
+**Context:** On a cold **`docker compose up`**, browsers could hit **NGINX** while the gateway or backends were still booting, producing **502** responses and a poor demo experience.  
+**Decision:** Add **Docker healthchecks** to every long-running service (Python **`/health`**, frontend **`fetch`**, NGINX **`wget`**) and set **`depends_on`** with **`condition: service_healthy`** for **gateway** → **frontend** → **nginx** (and gateway’s upstream services). Use a YAML anchor (**`x-fastapi-healthcheck`**) for identical FastAPI probes.  
+**Consequences:** First start takes longer until all probes pass; **`start_period`** accommodates slow imports. Changing listen ports inside images requires updating healthcheck URLs.

@@ -2,7 +2,7 @@
 
 Public HTTP entry (via NGINX): **`/api/*`** → **gateway service** (prefix stripped). Local Next.js dev uses **`/api/*` rewrites** to the gateway (see `GATEWAY_INTERNAL_URL` in `.env.example`).
 
-## Live (Milestone 2)
+## Public API (current)
 
 | Method | Path | Routed to | Description |
 |--------|------|-----------|-------------|

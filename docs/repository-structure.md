@@ -29,8 +29,6 @@ flowchart LR
   W --> R
   W --> PG
   RET --> PG
-  RET --> R
-  LLM --> RET
   AUTH --> PG
   ING --> PG
 ```
@@ -76,8 +74,8 @@ Retrieval and generation are separate services so scaling, caching, and provider
 ## Frontend layout (`frontend/src/`)
 
 - **`app/`** — App Router: `(marketing)/` (landing), `(auth)/` (login, register), `(app)/` (shell + dashboard, documents, query).  
-- **`components/ui/`** — Design-system primitives: `Button`, `Input`, `Label`, `Textarea`, `Card`, `Table`, `Badge`, `Spinner`, `EmptyState`, `LoadingState`, `ErrorState`.  
-- **`components/app/`** — Shell: `AppShell`, `Sidebar`, `AppHeader`, `Logo`, `QueryForm`.  
+- **`components/ui/`** — Design-system primitives: `Button`, `Input`, `Label`, `Textarea`, `Card`, `Table`, `Badge`, `Spinner`, `Skeleton`, `EmptyState`, `LoadingState`, `ErrorState`.  
+- **`components/app/`** — Shell: `AppShell`, `Sidebar`, `header.tsx` (`AppHeader`), `Logo`, `PageHeader`, `GatewayHealth`, `nav-icons`.  
 - **`components/auth/`** — Login/register forms, **`AuthGate`** for protected routes.  
 - **`contexts/`** — **`AuthProvider`** (token + `/v1/auth/me`), **`WorkspaceProvider`** (list + active workspace).  
 - **`lib/api.ts`** — `apiFetch` to **`/api/...`** (dev rewrites → gateway).  

@@ -35,9 +35,15 @@ The repository is a **monorepo**: one Git history, multiple deployable units. Py
 - **Asynchronous** ingestion via **Redis** (`LPUSH` in ingestion, **`BRPOP`** in worker): worker reads files from shared **`UPLOAD_DIR`**, writes **`document_chunks`** with **`pgvector`** embeddings (`text-embedding-3-small`, 1536-d), updates **`documents.status`**.  
 - **No shared in-memory state** between API replicas; coordination goes through Postgres/Redis.  
 
+## Docker Compose orchestration
+
+- **Order:** **Postgres** and **Redis** become healthy first. **auth-service**, **llm-service**, and **retrieval-service** start and pass **`GET /health`**. **ingestion-service** waits for **auth** (DB migrations / shared schema expectations). **worker-service** waits for **ingestion** healthy (upload volume and queue contract). **gateway-service** waits for **auth**, **ingestion**, **retrieval**, and **llm** healthy. **frontend** waits for **gateway** healthy; **NGINX** waits for **frontend** and **gateway** healthy.
+- **NGINX** config lives at **`infra/nginx/nginx.conf`** (comments describe **`/api/`** vs **`/`** and upload size).
+- **Volumes:** **`pgdata`** (database), **`ingestion_uploads`** (ingestion read/write, worker read-only).
+
 ## Health and configuration
 
-Each FastAPI service exposes **`GET /health`** returning a shared **`HealthResponse`** (`status`, `service`) for load balancers and Compose health checks (extended in later milestones). Configuration uses **environment variables** (see root `.env.example`); secrets are never committed.
+Each FastAPI service exposes **`GET /health`** (ingestion returns a small JSON shape consistent with the others). Docker healthchecks call **`http://127.0.0.1:8000/health`** inside each container; the **frontend** image uses **Node `fetch`** against port **3000**. Configuration uses **environment variables** (see **`.env.example`**); secrets stay out of Git.
 
 ## Local Python development (single service)
 
@@ -47,11 +53,12 @@ From the repo root, set `PYTHONPATH` to include the repo and the service directo
 
 Then run Uvicorn with working directory `services/gateway-service` and module `app.main:app`.
 
-## Security (directional)
+## Security
 
-- **JWT** validation at gateway and/or services (refined in Milestone 2).  
-- **Workspace isolation** enforced in retrieval and ingestion queries, not only in the UI.  
-- **Least privilege** DB roles per service as the deployment model matures.  
+- **JWT (HS256):** Gateway forwards **`Authorization`** to auth-backed routes; ingestion, retrieval, and orchestrated query paths validate the token and **workspace membership** in service code.  
+- **Workspace isolation** is enforced in SQL / vector queries, not only in the UI.  
+- **Internal-only** URLs (**`RETRIEVAL_SERVICE_URL`**, **`LLM_SERVICE_URL`**) are reachable on the Docker network; do not expose them on public interfaces without an additional control plane.  
+- **Least privilege** DB roles per service are a future hardening step for production deployments.  
 
 ## Evolution
 
