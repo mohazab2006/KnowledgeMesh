@@ -51,7 +51,7 @@ flowchart LR
 | `services/gateway-service/` | Public API edge; **proxies** `/v1/auth/*` and `/v1/workspaces/*` to auth (more prefixes later) |
 | `services/auth-service/` | Users, bcrypt passwords, JWT, workspaces, memberships (SQLAlchemy + asyncpg) |
 | `services/ingestion-service/` | Uploads, metadata, job enqueue |
-| `services/worker-service/` | Async indexing pipeline |
+| `services/worker-service/` | Redis `BRPOP` consumer: extract → chunk → OpenAI embed → `document_chunks` (pgvector) |
 | `services/retrieval-service/` | Vector search and context retrieval |
 | `services/llm-service/` | Grounded generation + citations |
 | `shared/` | Cross-service schemas and shared utilities |

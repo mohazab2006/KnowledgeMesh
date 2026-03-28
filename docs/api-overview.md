@@ -18,6 +18,8 @@ Public HTTP entry (via NGINX): **`/api/*`** → **gateway service** (prefix stri
 | GET | `/v1/workspaces/{id}/documents/{document_id}` | Ingestion (via gateway) | Document metadata |
 | DELETE | `/v1/workspaces/{id}/documents/{document_id}` | Ingestion (via gateway) | Remove row + stored file (member only) |
 
+**Internal data (Milestone 4):** Postgres table **`document_chunks`** holds chunk text and **`pgvector`** embeddings per workspace/document; populated by **worker-service**, queried in **Milestone 5** retrieval—not a public HTTP resource yet.
+
 ## Planned (later milestones)
 
 - **`/v1/workspaces/{id}/query`** — RAG query; gateway orchestrates retrieval + LLM  

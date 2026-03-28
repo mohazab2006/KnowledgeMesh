@@ -21,13 +21,13 @@ End-state we’re building toward (see milestones for what’s live today):
 | **APIs** | Python, FastAPI |
 | **Data** | PostgreSQL 16 + pgvector (vector storage), Redis (queues / cache) |
 | **Delivery** | Docker Compose, NGINX reverse proxy |
-| **AI (planned)** | **OpenAI API** for embeddings + chat (other providers possible later); integrated in backend services in later milestones, not in M1 |
+| **AI** | **OpenAI API** for embeddings in **worker-service**; chat/RAG wiring in later milestones |
 
-**Target architecture:** **RAG** (retrieve relevant chunks, *then* generate) so answers stay **grounded in your files**. That full loop—including OpenAI calls—is **roadmapped**, not finished in the UI-only milestone.
+**Target architecture:** **RAG** (retrieve relevant chunks, *then* generate) so answers stay **grounded in your files**. The **embedding** side of that loop runs in **worker-service** once `OPENAI_API_KEY` is set; **retrieval + chat** are still roadmapped.
 
 ## Where we are now
 
-This README describes the **whole product**, not a single milestone. **Milestones 0–3** are done: through **document upload** (ingestion service, gateway routing to it, **Documents** UI, Redis job stub). **Worker processing, vectors, and OpenAI-backed RAG** follow in **later milestones**. Details: [`docs/milestones.md`](docs/milestones.md).
+This README describes the **whole product**, not a single milestone. **Milestones 0–4** are done through **async ingestion** (worker consumes Redis jobs, **PDF/text** extraction, **chunk + embed**, **pgvector** rows, document status **indexed / failed**). **Semantic retrieval + RAG query UI** are **Milestone 5**. Details: [`docs/milestones.md`](docs/milestones.md).
 
 ## Engineers: go deeper
 

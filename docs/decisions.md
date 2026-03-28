@@ -65,3 +65,11 @@ Format: short ADR-style entries. New decisions are appended with a date.
 **Context:** Workspace-scoped uploads need persistence and a queue hand-off without folding file I/O into the auth service.  
 **Decision:** Add **ingestion-service** with **`documents`** rows + on-disk files under **`UPLOAD_DIR`**, **JWT + membership** checks aligned with auth, **Redis** enqueue for a future worker. The **gateway** proxies **`/v1/workspaces/{id}/documents*`** to ingestion and keeps **`/v1/workspaces`** (non-document paths) on auth; **document routes are registered before** the workspace catch-all.  
 **Consequences:** Two services touch “workspace” URLs; ordering in the gateway must stay correct. File storage uses a named Docker volume in Compose; NGINX raises upload size on **`/api/`**.
+
+---
+
+### ADR-009 — Worker owns chunk rows and embedding writes (Milestone 4) (2026-03-28)
+
+**Context:** Uploads must become searchable vectors without blocking the ingestion HTTP path.  
+**Decision:** **worker-service** consumes **Redis** jobs, reads the shared **upload volume**, extracts text (**pypdf** / UTF-8), chunks, calls **OpenAI embeddings**, and inserts **`document_chunks`** with **pgvector** columns; **`documents.status`** transitions **`processing` → `indexed`** (or **`failed`**). **Ingestion** deletes matching chunk rows on document delete when the table exists.  
+**Consequences:** **`OPENAI_API_KEY`** is required for successful indexing; worker and ingestion share **Postgres** and **uploads** but not code; embedding model/dimension are env-tunable and must stay aligned with the **`vector(n)`** column.

@@ -30,7 +30,7 @@ The repository is a **monorepo**: one Git history, multiple deployable units. Py
 ## Service communication
 
 - **Synchronous HTTP** from gateway to backend services for request/response paths.  
-- **Asynchronous** ingestion via **Redis** (producer: ingestion service; consumer: worker).  
+- **Asynchronous** ingestion via **Redis** (`LPUSH` in ingestion, **`BRPOP`** in worker): worker reads files from shared **`UPLOAD_DIR`**, writes **`document_chunks`** with **`pgvector`** embeddings (`text-embedding-3-small`, 1536-d), updates **`documents.status`**.  
 - **No shared in-memory state** between API replicas; coordination goes through Postgres/Redis.  
 
 ## Health and configuration

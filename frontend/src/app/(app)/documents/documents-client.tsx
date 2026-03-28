@@ -215,7 +215,14 @@ export function DocumentsClient() {
             <TableBody>
               {docs.map((d) => (
                 <TableRow key={d.id}>
-                  <TableCell className="max-w-[240px] truncate font-medium">
+                  <TableCell
+                    className="max-w-[240px] truncate font-medium"
+                    title={
+                      d.status === "failed" && d.error_message
+                        ? d.error_message
+                        : d.original_filename
+                    }
+                  >
                     {d.original_filename}
                   </TableCell>
                   <TableCell className="text-muted-foreground">

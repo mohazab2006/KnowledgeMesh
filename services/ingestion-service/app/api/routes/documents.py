@@ -8,7 +8,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -113,6 +113,19 @@ async def delete_document(
         raise HTTPException(status_code=404, detail="Document not found")
 
     abs_path = Path(settings.upload_dir) / doc.storage_path
+    chk = await db.execute(
+        text(
+            "SELECT 1 FROM information_schema.tables "
+            "WHERE table_schema = 'public' AND table_name = 'document_chunks'"
+        )
+    )
+    if chk.first() is not None:
+        await db.execute(
+            text(
+                "DELETE FROM document_chunks WHERE document_id = CAST(:did AS uuid)"
+            ),
+            {"did": str(document_id)},
+        )
     await db.delete(doc)
     await db.commit()
     if abs_path.is_file():
