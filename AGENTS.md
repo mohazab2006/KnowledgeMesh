@@ -17,7 +17,7 @@ Milestone 0 is **done**: monorepo, frontend scaffold, service stubs, Docker Comp
 
 ## Rules (project)
 
-- README stays an **engineering overview**, not a setup tutorial.
+- README is a **short product + stack** summary (recruiter/portfolio friendly), not a setup tutorial; deeper structure is in `docs/repository-structure.md` and `docs/architecture.md`.
 - After **each completed milestone**: review diffs, clean dead code, update docs, **one clear commit**, **push to GitHub**.
 - Do not collapse services into one process; keep boundaries honest.
 

@@ -2,7 +2,7 @@
 
 | # | Name | Status | Summary |
 |---|------|--------|---------|
-| 0 | Foundation | **Complete** | Monorepo layout, Next.js app, FastAPI service stubs, shared health schema, Docker Compose + NGINX skeleton, engineering README and docs |
+| 0 | Foundation | **Complete** | Monorepo layout, Next.js app, FastAPI service stubs, shared health schema, Docker Compose + NGINX skeleton, README and docs |
 | 1 | Design system + UI foundation | Planned | App shell, sidebar, dashboard layout, auth pages UI, primitives (buttons, inputs, cards, tables, badges) |
 | 2 | Auth + workspace domain | Planned | Auth service implementation, JWT, workspace CRUD/membership, protected routes |
 | 3 | Document management + upload | Planned | Models, upload API, list/detail UI, status badges, job registration |
