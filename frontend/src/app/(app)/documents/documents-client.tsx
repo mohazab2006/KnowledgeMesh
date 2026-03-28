@@ -14,8 +14,51 @@ import {
 } from "@/components/ui/table";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { useWorkspace } from "@/contexts/workspace-context";
-import { ApiError, apiFetch, apiUpload } from "@/lib/api";
+import { ApiError, apiFetch, apiFetchBlob, apiFetchText, apiUpload } from "@/lib/api";
 import type { DocumentOut } from "@/types/api";
+
+const UPLOAD_ACCEPT =
+  ".pdf,.txt,.md,.markdown,.csv,.tsv,.json,.log,.html,.htm,.xml,.rst";
+
+const TEXT_PREVIEW_EXT = new Set([
+  ".txt",
+  ".md",
+  ".markdown",
+  ".csv",
+  ".tsv",
+  ".json",
+  ".log",
+  ".html",
+  ".htm",
+  ".xml",
+  ".rst",
+]);
+
+const PREVIEW_TEXT_MAX = 400_000;
+
+function fileExtLower(name: string): string {
+  const i = name.lastIndexOf(".");
+  return i >= 0 ? name.slice(i).toLowerCase() : "";
+}
+
+/** What we can show in-app (PDF in iframe; text types as monospace). */
+function previewKind(doc: DocumentOut): "pdf" | "text" | null {
+  const name = doc.original_filename.toLowerCase();
+  const ext = fileExtLower(name);
+  const ct = (doc.content_type || "").toLowerCase();
+  if (ct.includes("pdf") || ext === ".pdf") return "pdf";
+  if (TEXT_PREVIEW_EXT.has(ext)) return "text";
+  if (ct.startsWith("text/")) return "text";
+  if (ct === "application/json" || ct === "application/xml") return "text";
+  return null;
+}
+
+type PreviewModal =
+  | { phase: "closed" }
+  | { phase: "loading"; title: string }
+  | { phase: "error"; title: string; message: string }
+  | { phase: "pdf"; title: string; objectUrl: string }
+  | { phase: "text"; title: string; text: string };
 
 function statusVariant(status: string): NonNullable<BadgeProps["variant"]> {
   switch (status) {
@@ -56,7 +99,37 @@ export function DocumentsClient() {
   const [uploading, setUploading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [previewModal, setPreviewModal] = useState<PreviewModal>({
+    phase: "closed",
+  });
   const inputRef = useRef<HTMLInputElement>(null);
+  const previewBlobUrlRef = useRef<string | null>(null);
+
+  const closePreview = useCallback(() => {
+    if (previewBlobUrlRef.current) {
+      URL.revokeObjectURL(previewBlobUrlRef.current);
+      previewBlobUrlRef.current = null;
+    }
+    setPreviewModal({ phase: "closed" });
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (previewBlobUrlRef.current) {
+        URL.revokeObjectURL(previewBlobUrlRef.current);
+        previewBlobUrlRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (previewModal.phase === "closed") return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closePreview();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [previewModal.phase, closePreview]);
 
   const load = useCallback(async () => {
     if (!activeId) {
@@ -125,6 +198,51 @@ export function DocumentsClient() {
     }
   };
 
+  const openPreview = useCallback(
+    async (doc: DocumentOut) => {
+      if (!activeId) return;
+      const kind = previewKind(doc);
+      if (!kind) return;
+      setPreviewModal({ phase: "loading", title: doc.original_filename });
+      const path = `v1/workspaces/${activeId}/documents/${doc.id}/file`;
+      try {
+        if (kind === "pdf") {
+          const blob = await apiFetchBlob(path);
+          const objectUrl = URL.createObjectURL(blob);
+          if (previewBlobUrlRef.current) {
+            URL.revokeObjectURL(previewBlobUrlRef.current);
+          }
+          previewBlobUrlRef.current = objectUrl;
+          setPreviewModal({
+            phase: "pdf",
+            title: doc.original_filename,
+            objectUrl,
+          });
+        } else {
+          let text = await apiFetchText(path);
+          if (text.length > PREVIEW_TEXT_MAX) {
+            text =
+              text.slice(0, PREVIEW_TEXT_MAX) +
+              "\n\n… (preview truncated; file is larger)";
+          }
+          setPreviewModal({
+            phase: "text",
+            title: doc.original_filename,
+            text,
+          });
+        }
+      } catch (err) {
+        setPreviewModal({
+          phase: "error",
+          title: doc.original_filename,
+          message:
+            err instanceof ApiError ? err.message : "Could not load preview",
+        });
+      }
+    },
+    [activeId],
+  );
+
   if (wsLoading) {
     return (
       <p className="text-sm text-muted-foreground">Loading workspace…</p>
@@ -155,13 +273,19 @@ export function DocumentsClient() {
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Uploads for <span className="text-foreground">{active.name}</span>
-            . Status updates when the worker pipeline runs (Milestone 4).
+            . Allowed types: PDF and UTF‑8 text-friendly files (for example{" "}
+            <span className="text-foreground">.md</span>,{" "}
+            <span className="text-foreground">.csv</span>,{" "}
+            <span className="text-foreground">.json</span>,{" "}
+            <span className="text-foreground">.html</span>). Click a name to
+            quick-view when supported.
           </p>
         </div>
         <div className="flex items-center gap-2">
           <input
             ref={inputRef}
             type="file"
+            accept={UPLOAD_ACCEPT}
             className="sr-only"
             onChange={onFileChange}
             aria-hidden
@@ -215,15 +339,32 @@ export function DocumentsClient() {
             <TableBody>
               {docs.map((d) => (
                 <TableRow key={d.id}>
-                  <TableCell
-                    className="max-w-[240px] truncate font-medium"
-                    title={
-                      d.status === "failed" && d.error_message
-                        ? d.error_message
-                        : d.original_filename
-                    }
-                  >
-                    {d.original_filename}
+                  <TableCell className="max-w-[260px]">
+                    {previewKind(d) ? (
+                      <button
+                        type="button"
+                        className="block max-w-full truncate text-left font-medium text-foreground underline-offset-4 hover:underline"
+                        title={
+                          d.status === "failed" && d.error_message
+                            ? d.error_message
+                            : "Quick view"
+                        }
+                        onClick={() => void openPreview(d)}
+                      >
+                        {d.original_filename}
+                      </button>
+                    ) : (
+                      <span
+                        className="block max-w-full truncate font-medium"
+                        title={
+                          d.status === "failed" && d.error_message
+                            ? d.error_message
+                            : d.original_filename
+                        }
+                      >
+                        {d.original_filename}
+                      </span>
+                    )}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {formatSize(d.size_bytes)}
@@ -254,6 +395,67 @@ export function DocumentsClient() {
           </Table>
         </div>
       )}
+
+      {previewModal.phase !== "closed" ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          role="presentation"
+        >
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/60"
+            aria-label="Close preview"
+            onClick={closePreview}
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="doc-preview-title"
+            className="relative z-10 flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-lg border border-border bg-background shadow-lg"
+          >
+            <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-3">
+              <p
+                id="doc-preview-title"
+                className="min-w-0 truncate text-sm font-medium text-foreground"
+              >
+                {previewModal.title}
+              </p>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={closePreview}
+              >
+                Close
+              </Button>
+            </div>
+            <div className="min-h-0 flex-1 overflow-hidden p-3">
+              {previewModal.phase === "loading" ? (
+                <p className="p-8 text-center text-sm text-muted-foreground">
+                  Loading preview…
+                </p>
+              ) : null}
+              {previewModal.phase === "error" ? (
+                <p className="p-8 text-center text-sm text-destructive">
+                  {previewModal.message}
+                </p>
+              ) : null}
+              {previewModal.phase === "pdf" ? (
+                <iframe
+                  title={previewModal.title}
+                  src={previewModal.objectUrl}
+                  className="h-[min(70vh,720px)] w-full rounded-md border border-border bg-muted/30"
+                />
+              ) : null}
+              {previewModal.phase === "text" ? (
+                <pre className="h-[min(70vh,720px)] w-full overflow-auto whitespace-pre-wrap wrap-break-word rounded-md border border-border bg-muted/20 p-4 font-mono text-xs text-foreground">
+                  {previewModal.text}
+                </pre>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

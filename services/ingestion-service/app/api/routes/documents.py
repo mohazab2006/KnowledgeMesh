@@ -8,6 +8,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile
+from fastapi.responses import FileResponse
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,6 +19,40 @@ from app.models.document import Document
 from app.schemas.document import DocumentOut
 
 router = APIRouter()
+
+# Keep in sync with worker extractors (PDF + UTF-8 text-friendly types).
+_ALLOWED_SUFFIXES = frozenset(
+    {
+        ".pdf",
+        ".txt",
+        ".md",
+        ".markdown",
+        ".csv",
+        ".tsv",
+        ".json",
+        ".log",
+        ".html",
+        ".htm",
+        ".xml",
+        ".rst",
+    }
+)
+
+
+def _upload_allowed(original_name: str | None, content_type: str | None) -> bool:
+    ext = Path((original_name or "").lower()).suffix
+    if ext in _ALLOWED_SUFFIXES:
+        return True
+    ct = (content_type or "").lower().strip()
+    if ct.startswith("application/pdf"):
+        return True
+    if ct.startswith("text/"):
+        return True
+    if ct in ("application/json", "application/xml"):
+        return True
+    if ct == "application/octet-stream" and ext in _ALLOWED_SUFFIXES:
+        return True
+    return False
 
 
 def _safe_filename(name: str | None) -> str:
@@ -39,6 +74,51 @@ async def list_documents(
         .order_by(Document.created_at.desc())
     )
     return list(result.all())
+
+
+def _response_media_type(doc: Document) -> str:
+    ct = (doc.content_type or "").strip()
+    if ct and ct != "application/octet-stream":
+        return ct
+    fn = doc.original_filename.lower()
+    if fn.endswith(".pdf"):
+        return "application/pdf"
+    if fn.endswith((".md", ".markdown")):
+        return "text/markdown"
+    if fn.endswith(".html") or fn.endswith(".htm"):
+        return "text/html"
+    if fn.endswith(".json"):
+        return "application/json"
+    if fn.endswith(".csv") or fn.endswith(".tsv"):
+        return "text/csv"
+    if fn.endswith(".xml"):
+        return "application/xml"
+    if fn.endswith(".txt") or fn.endswith(".log") or fn.endswith(".rst"):
+        return "text/plain"
+    return "application/octet-stream"
+
+
+@router.get("/{document_id}/file")
+async def get_document_file(
+    workspace_id: UUID,
+    document_id: UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
+) -> FileResponse:
+    await assert_workspace_member(db, workspace_id, user_id)
+    doc = await db.get(Document, document_id)
+    if doc is None or doc.workspace_id != workspace_id:
+        raise HTTPException(status_code=404, detail="Document not found")
+    abs_path = Path(settings.upload_dir) / doc.storage_path
+    if not abs_path.is_file():
+        raise HTTPException(status_code=404, detail="File not found on disk")
+    media = _response_media_type(doc)
+    return FileResponse(
+        abs_path,
+        media_type=media,
+        filename=doc.original_filename,
+        content_disposition_type="inline",
+    )
 
 
 @router.get("/{document_id}", response_model=DocumentOut)
@@ -64,6 +144,14 @@ async def upload_document(
     user_id: Annotated[UUID, Depends(get_current_user_id)],
 ) -> Document:
     await assert_workspace_member(db, workspace_id, user_id)
+    if not _upload_allowed(file.filename, file.content_type):
+        raise HTTPException(
+            status_code=415,
+            detail=(
+                "Unsupported file type. Allowed: PDF, and text-friendly types "
+                "(txt, md, csv, json, html, xml, log, rst, tsv)."
+            ),
+        )
     content = await file.read()
     if len(content) > settings.max_upload_bytes:
         raise HTTPException(status_code=413, detail="File too large")

@@ -14,8 +14,9 @@ Public HTTP entry (via NGINX): **`/api/*`** → **gateway service** (prefix stri
 | POST | `/v1/workspaces` | Auth | Create workspace (caller = owner) |
 | GET | `/v1/workspaces/{id}` | Auth | Workspace detail if member |
 | GET | `/v1/workspaces/{id}/documents` | Ingestion (via gateway) | List documents in workspace |
-| POST | `/v1/workspaces/{id}/documents` | Ingestion (via gateway) | Multipart upload (`file` field); enqueues Redis job stub |
+| POST | `/v1/workspaces/{id}/documents` | Ingestion (via gateway) | Multipart upload (`file` field); allowed types: PDF + text-friendly formats (see ingestion); enqueues Redis job |
 | GET | `/v1/workspaces/{id}/documents/{document_id}` | Ingestion (via gateway) | Document metadata |
+| GET | `/v1/workspaces/{id}/documents/{document_id}/file` | Ingestion (via gateway) | Stream original bytes (`Content-Disposition: inline`; member only) |
 | DELETE | `/v1/workspaces/{id}/documents/{document_id}` | Ingestion (via gateway) | Remove row + stored file (member only) |
 
 **Internal data (Milestone 4):** Postgres table **`document_chunks`** holds chunk text and **`pgvector`** embeddings per workspace/document; populated by **worker-service**, queried in **Milestone 5** retrieval—not a public HTTP resource yet.

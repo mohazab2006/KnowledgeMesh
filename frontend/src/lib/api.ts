@@ -77,6 +77,64 @@ export async function apiFetch<T>(
   return data as T;
 }
 
+/** Authenticated fetch; caller reads body (blob, text, stream). */
+export async function apiFetchRaw(
+  path: string,
+  init: RequestInit = {},
+): Promise<Response> {
+  const url = path.startsWith("http")
+    ? path
+    : `${API_PREFIX}/${path.replace(/^\//, "")}`;
+  const headers = new Headers(init.headers);
+  const token = getStoredToken();
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  return fetch(url, { ...init, headers });
+}
+
+export async function apiFetchBlob(path: string): Promise<Blob> {
+  const res = await apiFetchRaw(path);
+  if (!res.ok) {
+    const text = await res.text();
+    let data: unknown = text;
+    try {
+      data = text ? (JSON.parse(text) as unknown) : text;
+    } catch {
+      /* keep text */
+    }
+    const msg =
+      typeof data === "object" &&
+      data !== null &&
+      "detail" in data &&
+      typeof (data as ApiErrorBody).detail === "string"
+        ? ((data as ApiErrorBody).detail as string)
+        : res.statusText;
+    throw new ApiError(res.status, msg || "Request failed", data);
+  }
+  return res.blob();
+}
+
+export async function apiFetchText(path: string): Promise<string> {
+  const res = await apiFetchRaw(path);
+  if (!res.ok) {
+    const text = await res.text();
+    let data: unknown = text;
+    try {
+      data = text ? (JSON.parse(text) as unknown) : text;
+    } catch {
+      /* keep text */
+    }
+    const msg =
+      typeof data === "object" &&
+      data !== null &&
+      "detail" in data &&
+      typeof (data as ApiErrorBody).detail === "string"
+        ? ((data as ApiErrorBody).detail as string)
+        : res.statusText;
+    throw new ApiError(res.status, msg || "Request failed", data);
+  }
+  return res.text();
+}
+
 /** Multipart upload: do not set Content-Type (browser sets boundary). */
 export async function apiUpload<T>(
   path: string,
