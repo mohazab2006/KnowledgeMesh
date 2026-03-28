@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     port: int = 8000
     auth_service_url: str = "http://127.0.0.1:8001"
     ingestion_service_url: str = "http://127.0.0.1:8002"
+    retrieval_service_url: str = "http://127.0.0.1:8003"
+    llm_service_url: str = "http://127.0.0.1:8004"
 
 
 settings = Settings()

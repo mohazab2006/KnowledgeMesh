@@ -7,7 +7,7 @@
 | 2 | Auth + workspace domain | **Complete** | Auth service + Postgres models, bcrypt + JWT, workspace CRUD/membership, gateway proxy, Next.js auth/workspace context, protected app shell, localStorage token |
 | 3 | Document management + upload | **Complete** | `documents` table, ingestion upload/list/detail, Redis enqueue stub, gateway split-routing, Documents UI |
 | 4 | Async ingestion pipeline | **Complete** | Worker `BRPOP`, PDF/text extract, chunk, OpenAI embed, `document_chunks` + pgvector, status + errors |
-| 5 | Retrieval + RAG query flow | Planned | Retrieval + LLM integration, citations, query UI |
+| 5 | Retrieval + RAG query flow | **Complete** | Retrieval pgvector search + LLM JSON citations; gateway **`POST .../query`**; Query UI wired |
 | 6 | UX polish + performance | Planned | Loading/error/empty states, cache where useful, responsive polish |
 | 7 | Infra polish + docs | Planned | Finalize Compose/NGINX/env, showcase-ready documentation |
 | 8 | Optional advanced | Backlog | Streaming, reranking, Ollama, analytics, admin |
@@ -51,4 +51,10 @@
 
 ## Next up
 
-**Milestone 5:** Retrieval API + LLM orchestration + Query UI.
+**Milestone 6:** UX polish + performance (loading/error/empty, caching where useful, responsive polish).
+
+## Milestone 5 — decisions
+
+- **retrieval-service** uses the same **`DATABASE_URL`**, **`JWT_SECRET`**, and **OpenAI** embedding settings as the worker (**`text-embedding-3-small`**, **1536** dimensions) for query vectors; **pgvector** **`<=>`** orders nearest chunks per workspace with a **`documents`** join for filenames.  
+- **llm-service** exposes **`POST /v1/rag/complete`** with **`response_format=json_object`**; prompts enumerate context blocks **`[1]…[n]`** and expect **`answer`** + **`cited_indices`**.  
+- **gateway** implements **`POST /v1/workspaces/{id}/query`** before the workspace catch-all; **`RETRIEVAL_SERVICE_URL`** and **`LLM_SERVICE_URL`** in Compose.

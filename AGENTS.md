@@ -2,15 +2,15 @@
 
 ## Current milestone
 
-**MILESTONE 5 — Retrieval + RAG query flow** (next)
+**MILESTONE 6 — UX polish + performance** (next)
 
-Milestone 4 is **done**: **worker-service** **`BRPOP`** on **`km:ingestion:jobs`**, **PDF** (pypdf) + **text** extraction, character chunking, **OpenAI** embeddings, **`document_chunks`** table + **`vector`** extension, **`documents.status`** → **indexed** / **failed**; Compose mounts **`ingestion_uploads`** read-only on the worker; **`OPENAI_API_KEY`** in `.env`.
+Milestone 5 is **done**: **gateway** **`POST /v1/workspaces/{id}/query`** orchestrates **retrieval-service** (**OpenAI** query embed + **pgvector** similarity on **`document_chunks`**, JWT + workspace membership) and **llm-service** (**JSON** answer + **`cited_indices`**); **Query** UI calls the gateway with the active workspace.
 
-## M5 goals
+## M6 goals
 
-- **Retrieval service** (or gateway path): similarity search over **`document_chunks`** scoped by **workspace**  
-- **LLM path** for grounded answers + **citations**  
-- **Query** UI wired to real API  
+- Tighten **loading / error / empty** patterns across app routes  
+- **Caching** or deduplication where it helps (e.g. dashboard stats, read-only lists)  
+- **Responsive** and visual polish where still rough  
 
 ## Rules (project)
 
@@ -18,6 +18,6 @@ Milestone 4 is **done**: **worker-service** **`BRPOP`** on **`km:ingestion:jobs`
 - After **each completed milestone**: review diffs, clean dead code, update docs, **one clear commit**, **push to GitHub**.
 - Do not collapse services into one process; keep boundaries honest.
 
-## When M5 is complete
+## When M6 is complete
 
-Update this file to **MILESTONE 6**, summarize work, and give a commit message. Then UX polish per `docs/milestones.md`.
+Update this file to **MILESTONE 7**, summarize work, and give a commit message. Then infra/docs polish per `docs/milestones.md`.

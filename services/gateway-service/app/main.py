@@ -5,6 +5,11 @@ from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 
 from app.core.config import settings
+from app.schemas.query import (
+    QueryCitationOut,
+    WorkspaceQueryRequest,
+    WorkspaceQueryResponse,
+)
 from shared.schemas.health import HealthResponse
 
 _HOP_BY_HOP = {
@@ -41,7 +46,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="KnowledgeMesh API Gateway",
-    version="0.3.0",
+    version="0.4.0",
     lifespan=lifespan,
 )
 
@@ -137,6 +142,106 @@ async def proxy_workspace_documents(
         f"v1/workspaces/{workspace_id}/documents",
         base_url=settings.ingestion_service_url,
         service_label="ingestion service",
+    )
+
+
+@app.post(
+    "/v1/workspaces/{workspace_id}/query",
+    response_model=WorkspaceQueryResponse,
+)
+async def workspace_rag_query(
+    workspace_id: str,
+    body: WorkspaceQueryRequest,
+    request: Request,
+) -> WorkspaceQueryResponse | JSONResponse:
+    auth = request.headers.get("authorization") or request.headers.get(
+        "Authorization"
+    )
+    if not auth:
+        return JSONResponse(status_code=401, content={"detail": "Missing authorization"})
+
+    r_base = settings.retrieval_service_url.rstrip("/")
+    l_base = settings.llm_service_url.rstrip("/")
+    try:
+        sr = await request.app.state.http.post(
+            f"{r_base}/v1/workspaces/{workspace_id}/search",
+            json={"query": body.query, "top_k": body.top_k},
+            headers={"Authorization": auth},
+        )
+    except httpx.RequestError as exc:
+        return JSONResponse(
+            status_code=502,
+            content={"detail": f"Retrieval service unreachable: {exc!s}"},
+        )
+
+    if sr.status_code != 200:
+        try:
+            payload = sr.json()
+        except Exception:
+            payload = {"detail": (sr.text or "")[:500] or "Upstream error"}
+        return JSONResponse(status_code=sr.status_code, content=payload)
+
+    search_data = sr.json()
+    chunks = search_data.get("chunks") or []
+    if not chunks:
+        return WorkspaceQueryResponse(
+            answer=(
+                "No indexed chunks were found for this workspace yet. "
+                "Upload and index documents first."
+            ),
+            citations=[],
+            chunks_retrieved=0,
+        )
+
+    dist_by_chunk: dict[str, float] = {}
+    for c in chunks:
+        cid = c.get("chunk_id")
+        if cid is not None and "distance" in c:
+            dist_by_chunk[str(cid)] = float(c["distance"])
+
+    try:
+        lr = await request.app.state.http.post(
+            f"{l_base}/v1/rag/complete",
+            json={"question": body.query, "contexts": chunks},
+        )
+    except httpx.RequestError as exc:
+        return JSONResponse(
+            status_code=502,
+            content={"detail": f"LLM service unreachable: {exc!s}"},
+        )
+
+    if lr.status_code != 200:
+        try:
+            payload = lr.json()
+        except Exception:
+            payload = {"detail": (lr.text or "")[:500] or "Upstream error"}
+        return JSONResponse(status_code=lr.status_code, content=payload)
+
+    out = lr.json()
+    raw_citations = out.get("citations") or []
+    citations: list[QueryCitationOut] = []
+    for item in raw_citations:
+        if not isinstance(item, dict):
+            continue
+        try:
+            cid = str(item["chunk_id"])
+            citations.append(
+                QueryCitationOut(
+                    chunk_id=item["chunk_id"],
+                    document_id=item["document_id"],
+                    chunk_index=int(item["chunk_index"]),
+                    document_title=str(item.get("document_title", "")),
+                    excerpt=str(item.get("excerpt", "")),
+                    relevance_distance=dist_by_chunk.get(cid),
+                )
+            )
+        except (KeyError, TypeError, ValueError):
+            continue
+
+    return WorkspaceQueryResponse(
+        answer=str(out.get("answer", "")),
+        citations=citations,
+        chunks_retrieved=len(chunks),
     )
 
 

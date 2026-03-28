@@ -19,11 +19,14 @@ Public HTTP entry (via NGINX): **`/api/*`** → **gateway service** (prefix stri
 | GET | `/v1/workspaces/{id}/documents/{document_id}` | Ingestion (via gateway) | Document metadata |
 | GET | `/v1/workspaces/{id}/documents/{document_id}/file` | Ingestion (via gateway) | Stream original bytes (`Content-Disposition: inline`; member only) |
 | DELETE | `/v1/workspaces/{id}/documents/{document_id}` | Ingestion (via gateway) | Remove row + stored file (member only) |
+| POST | `/v1/workspaces/{id}/query` | **Gateway** (native route) | RAG: retrieval search + LLM; JSON body `{ "query", "top_k?" }` → `{ answer, citations[], chunks_retrieved }` (Bearer JWT) |
 
-**Internal data (Milestone 4):** Postgres table **`document_chunks`** holds chunk text and **`pgvector`** embeddings per workspace/document; populated by **worker-service**, queried in **Milestone 5** retrieval—not a public HTTP resource yet.
+**Internal (not for browsers directly):** **`POST /v1/workspaces/{id}/search`** on **retrieval-service** (gateway forwards JWT). **`POST /v1/rag/complete`** on **llm-service** (gateway only, Docker network).
+
+**Internal data (Milestone 4):** Postgres **`document_chunks`** holds chunk text and **`pgvector`** embeddings; **Milestone 5** reads them via retrieval-service.
 
 ## Planned (later milestones)
 
-- **`/v1/workspaces/{id}/query`** — RAG query; gateway orchestrates retrieval + LLM  
+- **Query analytics** (e.g. **`queries_24h`**) and optional **streaming** answers  
 
 OpenAPI: hit **`/docs`** on each service’s **direct** port during development; the gateway **proxies** paths to auth and ingestion without merging OpenAPI.

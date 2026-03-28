@@ -33,6 +33,8 @@ services:
       ENVIRONMENT: ${ENVIRONMENT:-development}
       AUTH_SERVICE_URL: http://auth-service:8000
       INGESTION_SERVICE_URL: http://ingestion-service:8000
+      RETRIEVAL_SERVICE_URL: http://retrieval-service:8000
+      LLM_SERVICE_URL: http://llm-service:8000
     ports:
       - "${GATEWAY_PORT:-8000}:8000"
     depends_on:
@@ -43,6 +45,10 @@ services:
       auth-service:
         condition: service_started
       ingestion-service:
+        condition: service_started
+      retrieval-service:
+        condition: service_started
+      llm-service:
         condition: service_started
 
   auth-service:
@@ -89,6 +95,9 @@ services:
       dockerfile: services/retrieval-service/Dockerfile
     environment:
       ENVIRONMENT: ${ENVIRONMENT:-development}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env (long random string)}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
     ports:
       - "${RETRIEVAL_SERVICE_PORT:-8003}:8000"
     depends_on:
@@ -103,6 +112,7 @@ services:
       dockerfile: services/llm-service/Dockerfile
     environment:
       ENVIRONMENT: ${ENVIRONMENT:-development}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
     ports:
       - "${LLM_SERVICE_PORT:-8004}:8000"
     depends_on:

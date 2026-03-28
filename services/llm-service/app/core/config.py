@@ -1,3 +1,4 @@
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -7,6 +8,9 @@ class Settings(BaseSettings):
     service_name: str = "llm-service"
     environment: str = "development"
     port: int = 8000
+    openai_api_key: str = Field(default="")
+    chat_model: str = "gpt-4o-mini"
+    max_context_chars: int = 28000
 
 
 settings = Settings()

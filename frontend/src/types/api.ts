@@ -25,6 +25,21 @@ export type WorkspaceDocumentStatsOut = {
   queries_24h: number | null;
 };
 
+export type QueryCitation = {
+  chunk_id: string;
+  document_id: string;
+  chunk_index: number;
+  document_title: string;
+  excerpt: string;
+  relevance_distance: number | null;
+};
+
+export type QueryResponse = {
+  answer: string;
+  citations: QueryCitation[];
+  chunks_retrieved: number;
+};
+
 export type DocumentOut = {
   id: string;
   workspace_id: string;

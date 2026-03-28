@@ -73,3 +73,11 @@ Format: short ADR-style entries. New decisions are appended with a date.
 **Context:** Uploads must become searchable vectors without blocking the ingestion HTTP path.  
 **Decision:** **worker-service** consumes **Redis** jobs, reads the shared **upload volume**, extracts text (**pypdf** / UTF-8), chunks, calls **OpenAI embeddings**, and inserts **`document_chunks`** with **pgvector** columns; **`documents.status`** transitions **`processing` → `indexed`** (or **`failed`**). **Ingestion** deletes matching chunk rows on document delete when the table exists.  
 **Consequences:** **`OPENAI_API_KEY`** is required for successful indexing; worker and ingestion share **Postgres** and **uploads** but not code; embedding model/dimension are env-tunable and must stay aligned with the **`vector(n)`** column.
+
+---
+
+### ADR-010 — Gateway-orchestrated RAG (Milestone 5) (2026-03-28)
+
+**Context:** Users need a single authenticated workspace query that combines vector retrieval and grounded generation without collapsing services into one binary.  
+**Decision:** **`POST /v1/workspaces/{id}/query`** is implemented **on the gateway**: it forwards **`Authorization`** to **retrieval-service** **`POST .../search`** (OpenAI query embedding + pgvector `<=>` over **`document_chunks`** joined to **`documents`** for titles), then calls **llm-service** **`POST /v1/rag/complete`** with retrieved chunks (no end-user JWT on llm; internal HTTP only). Response merges **relevance distance** from retrieval into citations.  
+**Consequences:** Gateway must start after retrieval and llm in Compose; **`RETRIEVAL_SERVICE_URL`** / **`LLM_SERVICE_URL`** required; query and index embedding **model + dimension** must stay aligned. LLM is not exposed as a public authenticated surface—only the gateway calls it.
