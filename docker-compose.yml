@@ -155,6 +155,8 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        GATEWAY_INTERNAL_URL: http://gateway-service:8000
     environment:
       NODE_ENV: production
     ports:

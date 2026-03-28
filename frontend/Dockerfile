@@ -7,6 +7,9 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# Rewrites in next.config.ts are resolved at build time; inside Compose the gateway is a sibling service, not 127.0.0.1.
+ARG GATEWAY_INTERNAL_URL=http://gateway-service:8000
+ENV GATEWAY_INTERNAL_URL=$GATEWAY_INTERNAL_URL
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
