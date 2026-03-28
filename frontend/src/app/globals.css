@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+  color-scheme: light;
   --background: #fafafa;
   --foreground: #0a0a0a;
   --card: #ffffff;
@@ -9,7 +10,7 @@
   --muted-foreground: #71717a;
   --border: #e4e4e7;
   --ring: #a1a1aa;
-  --accent: #3b82f6;
+  --accent: #0070f3;
   --accent-foreground: #ffffff;
   --destructive: #dc2626;
   --destructive-foreground: #fef2f2;
@@ -21,6 +22,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
+    color-scheme: dark;
     --background: #09090b;
     --foreground: #fafafa;
     --card: #18181b;
@@ -29,8 +31,8 @@
     --muted-foreground: #a1a1aa;
     --border: #27272a;
     --ring: #52525b;
-    --accent: #60a5fa;
-    --accent-foreground: #0a0a0a;
+    --accent: #3291ff;
+    --accent-foreground: #fafafa;
     --destructive: #ef4444;
     --destructive-foreground: #450a0a;
   }
@@ -61,19 +63,29 @@ body {
   background-color: var(--background);
   background-image: radial-gradient(
     ellipse 120% 80% at 50% -20%,
-    color-mix(in oklab, var(--accent) 8%, transparent),
+    color-mix(in oklab, var(--accent) 6%, transparent),
     transparent 55%
   );
   color: var(--foreground);
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-tap-highlight-color: color-mix(in oklab, var(--accent) 25%, transparent);
 }
 
 @media (prefers-color-scheme: dark) {
   body {
     background-image: radial-gradient(
       ellipse 100% 60% at 50% -15%,
-      color-mix(in oklab, var(--accent) 12%, transparent),
+      color-mix(in oklab, var(--accent) 10%, transparent),
       transparent 50%
     );
+  }
+}
+
+/* Avoid iOS Safari zoom on focus: keep form text at least 16px on small screens */
+@media (max-width: 640px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
   }
 }

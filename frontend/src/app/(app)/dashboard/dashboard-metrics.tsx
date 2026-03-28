@@ -76,7 +76,7 @@ export function DashboardMetrics() {
   if (!wsLoading && (!activeId || !active)) {
     return (
       <p className="rounded-lg border border-dashed border-border bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
-        Select a workspace from the header to load document metrics.
+        Select a workspace from the header to see activity.
       </p>
     );
   }
@@ -86,12 +86,9 @@ export function DashboardMetrics() {
 
   if (initialLoading && !error) {
     return (
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2">
         <MetricSkeletonCard />
         <MetricSkeletonCard />
-        <div className="sm:col-span-2 lg:col-span-1">
-          <MetricSkeletonCard />
-        </div>
       </div>
     );
   }
@@ -99,13 +96,12 @@ export function DashboardMetrics() {
   const showValues = Boolean(stats && activeId && active && !error);
   const indexed = stats?.indexed_count ?? 0;
   const processing = stats?.processing_count ?? 0;
-  const queries = stats?.queries_24h;
 
   return (
     <div className="space-y-4">
       {error ? (
         <ErrorState
-          title="Could not load metrics"
+          title="Could not load activity"
           message={error}
           action={
             <Button
@@ -122,11 +118,11 @@ export function DashboardMetrics() {
       ) : null}
 
       {!error ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2">
           <Card>
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between gap-2">
-                <CardDescription>Documents</CardDescription>
+                <CardDescription>Ready to search</CardDescription>
                 {loading && stats ? (
                   <Spinner
                     className="size-4 border-muted-foreground/30 border-t-foreground/60"
@@ -134,43 +130,26 @@ export function DashboardMetrics() {
                   />
                 ) : null}
               </div>
-              <CardTitle className="text-3xl font-semibold tabular-nums">
+              <CardTitle className="text-3xl font-semibold tabular-nums tracking-tight">
                 {showValues ? formatCount(indexed) : "—"}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Indexed files across the active workspace.
+                Documents fully indexed for this workspace.
               </p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Processing</CardDescription>
-              <CardTitle className="text-3xl font-semibold tabular-nums">
+              <CardDescription>In progress</CardDescription>
+              <CardTitle className="text-3xl font-semibold tabular-nums tracking-tight">
                 {showValues ? formatCount(processing) : "—"}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Queued, uploading, or running through the worker pipeline.
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="sm:col-span-2 lg:col-span-1">
-            <CardHeader className="pb-2">
-              <CardDescription>Queries (24h)</CardDescription>
-              <CardTitle className="text-3xl font-semibold tabular-nums">
-                {showValues
-                  ? queries === null || queries === undefined
-                    ? "—"
-                    : formatCount(queries)
-                  : "—"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Citation-backed answers (logged when query analytics ship).
+                Uploads still being prepared for search.
               </p>
             </CardContent>
           </Card>

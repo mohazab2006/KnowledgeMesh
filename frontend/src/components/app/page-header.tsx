@@ -18,12 +18,12 @@ export function PageHeader({
   return (
     <div
       className={cn(
-        "flex flex-wrap items-end justify-between gap-4 border-b border-border/60 pb-6",
+        "flex flex-wrap items-end justify-between gap-4 border-b border-border/70 pb-8",
         className,
       )}
     >
       <div className="min-w-0 max-w-2xl space-y-1">
-        <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+        <h2 className="text-2xl font-semibold tracking-[-0.02em] text-foreground">
           {title}
         </h2>
         {description ? (

@@ -46,31 +46,15 @@ export function ForgotPasswordForm() {
       <CardHeader>
         <CardTitle>Reset password</CardTitle>
         <CardDescription>
-          We will email a link when SMTP is configured. In development, the API
-          may return a token you can paste on the next screen.
+          If an account exists for this email, we will send reset instructions.
         </CardDescription>
       </CardHeader>
       <form onSubmit={(e) => void onSubmit(e)}>
         <CardContent className="space-y-4">
           {error ? <ErrorState message={error} /> : null}
           {done ? (
-            <div className="space-y-3 rounded-md border border-border bg-muted/30 p-4 text-sm">
-              <p className="text-foreground">{done.detail}</p>
-              {done.dev_reset_token ? (
-                <div className="space-y-2">
-                  <p className="font-medium text-foreground">Dev reset token</p>
-                  <p className="break-all font-mono text-xs text-muted-foreground">
-                    {done.dev_reset_token}
-                  </p>
-                  <Button asChild type="button" variant="secondary" size="sm">
-                    <Link
-                      href={`/reset-password?token=${encodeURIComponent(done.dev_reset_token)}`}
-                    >
-                      Open reset page with token
-                    </Link>
-                  </Button>
-                </div>
-              ) : null}
+            <div className="rounded-md border border-border bg-muted/30 p-4 text-sm text-foreground">
+              {done.detail}
             </div>
           ) : null}
           <div className="space-y-2">

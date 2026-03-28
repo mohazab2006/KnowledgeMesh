@@ -11,7 +11,6 @@ import { cn } from "@/lib/utils";
 import { AppHeader } from "@/components/app/header";
 import { Sidebar } from "@/components/app/sidebar";
 
-/** Shown in the sticky bar only when the page does not use its own `PageHeader` title. */
 const headerTitles: Record<string, string> = {
   "/workspaces/new": "New workspace",
 };

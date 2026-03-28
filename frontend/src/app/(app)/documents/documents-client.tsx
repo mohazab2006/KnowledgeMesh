@@ -302,14 +302,9 @@ export function DocumentsClient() {
         title="Documents"
         description={
           <>
-            Uploads for{" "}
-            <span className="text-foreground">{active.name}</span>. PDF and
-            UTF‑8–friendly types (
-            <span className="text-foreground">.md</span>,{" "}
-            <span className="text-foreground">.csv</span>,{" "}
-            <span className="text-foreground">.json</span>,{" "}
-            <span className="text-foreground">.html</span>, …). Click a name to
-            quick-view when supported.
+            Files in{" "}
+            <span className="text-foreground">{active.name}</span>. Add PDFs and
+            common text formats; select a row to preview when available.
           </>
         }
         aside={

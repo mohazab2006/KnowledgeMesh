@@ -85,12 +85,9 @@ export function QueryPageClient() {
         title="Query"
         description={
           <>
-            Retrieval + LLM over indexed chunks in{" "}
-            <span className="text-foreground">{active.name}</span>. Requires{" "}
-            <code className="rounded bg-muted px-1 py-0.5 text-xs">
-              OPENAI_API_KEY
-            </code>{" "}
-            on retrieval and LLM services.
+            Ask questions about your library in{" "}
+            <span className="text-foreground">{active.name}</span>. Answers
+            include sources you can open from the list on the right.
           </>
         }
       />
@@ -103,13 +100,13 @@ export function QueryPageClient() {
               aria-busy
             >
               <Spinner className="size-10" aria-label="Running query" />
-              <p className="text-sm text-muted-foreground">Retrieving context…</p>
+              <p className="text-sm text-muted-foreground">Searching your documents…</p>
             </div>
           ) : null}
           <CardHeader>
-            <CardTitle>Ask the mesh</CardTitle>
+            <CardTitle>Ask a question</CardTitle>
             <CardDescription>
-              Natural language over your indexed corpus in this workspace.
+              Use clear language; we will match meaning, not just keywords.
             </CardDescription>
           </CardHeader>
           <form onSubmit={(e) => void onSubmit(e)}>
@@ -174,8 +171,8 @@ export function QueryPageClient() {
                 ))}
               </div>
               <p className="mt-3 text-xs text-muted-foreground">
-                Retrieved {result.chunks_retrieved} chunk
-                {result.chunks_retrieved === 1 ? "" : "s"} for context.
+                Based on {result.chunks_retrieved} passage
+                {result.chunks_retrieved === 1 ? "" : "s"} from your library.
               </p>
             </div>
           ) : null}
@@ -192,8 +189,8 @@ export function QueryPageClient() {
             {!result || result.citations.length === 0 ? (
               <p className="text-sm text-muted-foreground">
                 {result && result.citations.length === 0
-                  ? "No citations returned for this answer."
-                  : "Run a query to see cited chunks and filenames here."}
+                  ? "No sources were attached to this answer."
+                  : "Sources from your documents will appear here after you run a query."}
               </p>
             ) : (
               <ul className="space-y-3 text-sm">
@@ -204,12 +201,6 @@ export function QueryPageClient() {
                   >
                     <p className="font-medium text-foreground">
                       {c.document_title}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Chunk {c.chunk_index}
-                      {c.relevance_distance != null
-                        ? ` · distance ${c.relevance_distance.toFixed(4)}`
-                        : null}
                     </p>
                     <p className="mt-2 text-muted-foreground">{c.excerpt}</p>
                   </li>
