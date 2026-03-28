@@ -27,7 +27,7 @@ End-state we’re building toward (see milestones for what’s live today):
 
 ## Where we are now
 
-This README describes the **whole product**, not a single milestone. **Milestone 0** (monorepo, stubs, Docker, docs) is done. **Milestone 1** is **next**: app shell, design system, and auth *pages* (UI only—real auth and APIs follow in M2+). **OpenAI / embeddings / end-to-end RAG** show up in **later milestones** (async pipeline, then retrieval + LLM). Details: [`docs/milestones.md`](docs/milestones.md).
+This README describes the **whole product**, not a single milestone. **Milestones 0–1** are done: monorepo and services foundation, then a **premium UI shell**, **design tokens**, **reusable primitives**, and **auth pages** (UI only). **Milestone 2** adds real **auth and workspaces**. **OpenAI / embeddings / end-to-end RAG** follow in **later milestones**. Details: [`docs/milestones.md`](docs/milestones.md).
 
 ## Engineers: go deeper
 

@@ -25,3 +25,11 @@ Format: short ADR-style entries. New decisions are appended with a date.
 **Context:** Resume and interview narrative need visible service boundaries.  
 **Decision:** Six Python services each run a minimal FastAPI app with `/health` only until features land.  
 **Consequences:** Some duplication of bootstrap code; acceptable until a shared `create_app` factory earns its keep.
+
+---
+
+### ADR-004 — Frontend design tokens without a component library (2026-03-28)
+
+**Context:** The UI must look premium and stay consistent across many screens; importing a heavy UI kit can obscure portfolio authorship.  
+**Decision:** Use Tailwind CSS v4 theme tokens (CSS variables + `@theme inline`) and small local primitives in `frontend/src/components/ui/`.  
+**Consequences:** We own accessibility and API surface area; Radix is used only where it clearly helps (`Slot` for polymorphic `Button`). Revisit shadcn-style full primitives if velocity drops.

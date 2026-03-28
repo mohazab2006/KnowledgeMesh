@@ -2,25 +2,24 @@
 
 ## Current milestone
 
-**MILESTONE 1 — Design system + UI foundation** (next)
+**MILESTONE 2 — Auth + workspace domain** (next)
 
-Milestone 0 is **done**: monorepo, frontend scaffold, service stubs, Docker Compose + NGINX, docs, README.
+Milestone 1 is **done**: design tokens, UI primitives, app shell, marketing + auth pages (UI), dashboard / documents / query layouts.
 
-## M1 goals
+## M2 goals
 
-- Premium minimal **app shell** (layout, sidebar, top nav)
-- **Dashboard** layout structure (placeholder content OK)
-- **Auth pages UI** (sign in / sign up — can be non-functional until M2)
-- Reusable primitives: **buttons, inputs, cards, tables, badges**
-- Tailwind-based **design tokens** (radius, spacing, typography rhythm)
-- Solid **empty**, **loading**, and **error** patterns (at least stubs)
+- **Auth service:** register, login, JWT issue/validate
+- **Workspace models** and membership
+- **Gateway** routes or proxy to auth
+- **Frontend:** wire forms to API, tokens/sessions, **protected** app routes
+- **Workspace** picker or create flow in the shell
 
 ## Rules (project)
 
-- README is a **short product + stack** summary (recruiter/portfolio friendly), not a setup tutorial; deeper structure is in `docs/repository-structure.md` and `docs/architecture.md`.
+- README is a **short product + stack** summary; deeper structure is in `docs/repository-structure.md` and `docs/architecture.md`.
 - After **each completed milestone**: review diffs, clean dead code, update docs, **one clear commit**, **push to GitHub**.
 - Do not collapse services into one process; keep boundaries honest.
 
-## When M1 is complete
+## When M2 is complete
 
-Update this file to **MILESTONE 2**, summarize work, and give a commit message. Then implement auth + workspace domain per `docs/milestones.md`.
+Update this file to **MILESTONE 3**, summarize work, and give a commit message. Then implement document management per `docs/milestones.md`.
