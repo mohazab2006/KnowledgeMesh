@@ -7,12 +7,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import documents
 from app.core.config import settings
 from app.db.session import init_db
+from app.models import document  # noqa: F401 — register Document on Base.metadata
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    import app.models.document  # noqa: F401
-
     await init_db()
     app.state.redis = redis.from_url(
         settings.redis_url,
