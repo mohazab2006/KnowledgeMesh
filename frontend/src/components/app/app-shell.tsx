@@ -53,7 +53,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-56 border-r border-border bg-card transition-transform duration-200 ease-out md:static md:z-0 md:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 w-[min(100vw-1rem,17.5rem)] shrink-0 border-r border-border bg-card transition-transform duration-200 ease-out sm:w-64 md:static md:z-0 md:w-64 md:translate-x-0",
           mobileNavOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
         )}
       >
@@ -62,7 +62,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col md:min-h-full">
         <AppHeader title={title} onMenuClick={() => setMobileNavOpen(true)} />
-        <main className="flex-1 px-4 py-6 md:px-8 md:py-8">{children}</main>
+        <main className="flex-1 px-4 py-6 sm:px-6 md:px-10 md:py-8">
+          {children}
+        </main>
       </div>
     </div>
   );

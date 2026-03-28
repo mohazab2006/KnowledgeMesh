@@ -18,11 +18,14 @@ export function Sidebar({ onNavigate, className }: SidebarProps) {
   const { logout, user } = useAuth();
 
   return (
-    <div className={cn("flex h-full flex-col", className)}>
-      <div className="px-4 pb-6">
-        <Logo />
+    <div className={cn("flex h-full min-h-0 flex-col", className)}>
+      <div className="flex min-h-14 shrink-0 items-center border-b border-border/70 px-4 sm:px-5">
+        <Logo className="min-w-0 py-1" />
       </div>
-      <nav className="flex flex-1 flex-col gap-0.5 px-2" aria-label="Main">
+      <nav
+        className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-3 py-4 sm:px-4"
+        aria-label="Main"
+      >
         {appNav.map((item) => {
           const active =
             pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -46,15 +49,18 @@ export function Sidebar({ onNavigate, className }: SidebarProps) {
           href="/workspaces/new"
           onClick={onNavigate}
           className={cn(
-            "rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground",
+            "rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground",
             pathname === "/workspaces/new" && "bg-muted text-foreground",
           )}
         >
           New workspace
         </Link>
       </nav>
-      <div className="mt-auto border-t border-border p-4">
-        <p className="truncate text-xs font-medium text-foreground">
+      <div className="mt-auto shrink-0 border-t border-border p-4 sm:p-5">
+        <p
+          className="break-all text-sm font-medium leading-snug text-foreground"
+          title={user?.email}
+        >
           {user?.email}
         </p>
         <Button

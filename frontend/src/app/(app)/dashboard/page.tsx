@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Badge } from "@/components/ui/badge";
+import { GatewayHealth } from "@/components/app/gateway-health";
 import {
   Card,
   CardContent,
@@ -7,7 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ErrorState } from "@/components/ui/error-state";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -70,19 +70,16 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <Card className="max-w-2xl border-dashed">
+      <Card className="max-w-2xl">
         <CardHeader>
-          <CardTitle className="text-base">Error pattern</CardTitle>
+          <CardTitle className="text-base">API status</CardTitle>
           <CardDescription>
-            Reuse for gateway failures, retrieval timeouts, or validation
-            issues—keeps alerts calm and scannable.
+            Live check against <code className="text-xs">/api/health</code> via
+            the gateway.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ErrorState
-            title="Gateway unreachable"
-            message="The API gateway did not respond. Confirm services are running and retry."
-          />
+          <GatewayHealth />
         </CardContent>
       </Card>
     </div>
