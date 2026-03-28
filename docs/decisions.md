@@ -49,3 +49,11 @@ Format: short ADR-style entries. New decisions are appended with a date.
 **Context:** Protected UI routes need credentials without introducing Next.js cookie plumbing in the same milestone as backend auth.  
 **Decision:** Store **JWT** in **`localStorage`** and send `Authorization: Bearer` on API calls; **`AuthGate`** handles client-side protection.  
 **Consequences:** XSS can exfiltrate tokens; document move to **httpOnly** cookies or BFF pattern in a hardening milestone.
+
+---
+
+### ADR-007 — No credential defaults in tracked Compose or config (2026-03-28)
+
+**Context:** Secret scanners (e.g. GitGuardian) flag **default passwords** and **JWT placeholders** committed in `docker-compose.yml`, `.env.example`, or Python defaults.  
+**Decision:** Require **`POSTGRES_*`**, **`JWT_SECRET`**, and **`DATABASE_URL`** via a **local `.env`** (gitignored). Compose uses `${VAR:?message}` where substitution is needed; **`.env.example` uses empty values** and comments only. Auth **Settings** has **no default** for `database_url` or `jwt_secret`.  
+**Consequences:** `docker compose up` fails until `.env` exists; developers copy `.env.example` and fill secrets. **If secrets were ever pushed, rotate them** and consider **history rewrite** (`git filter-repo` / BFG) because scanners and clones may still see old commits.
