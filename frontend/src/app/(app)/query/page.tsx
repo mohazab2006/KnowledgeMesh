@@ -7,7 +7,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { LoadingState } from "@/components/ui/loading-state";
 import { QueryForm } from "@/components/app/query-form";
 
 export const metadata: Metadata = {
@@ -23,7 +22,8 @@ export default function QueryPage() {
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
           Ask questions grounded in workspace documents. Retrieval and LLM
-          services wire up in Milestone 5.
+          services wire up in a later milestone; the form below is UI-only for
+          now.
         </p>
       </div>
 
@@ -44,7 +44,11 @@ export default function QueryPage() {
             </p>
           </CardContent>
           <CardFooter className="border-t border-border">
-            <LoadingState message="Waiting for query…" className="py-8" />
+            <p className="py-2 text-sm leading-relaxed text-muted-foreground">
+              No query has run yet. When RAG is enabled, ranked sources and
+              excerpts will show here after each answer. This panel does not
+              load in the background.
+            </p>
           </CardFooter>
         </Card>
       </div>

@@ -9,8 +9,8 @@ export const metadata: Metadata = {
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-full flex-col items-center justify-center bg-muted/40 px-4 py-12">
-      <div className="mb-8">
-        <Logo href="/" />
+      <div className="mb-8 flex justify-center">
+        <Logo href="/" variant="hero" />
       </div>
       <div className="w-full max-w-[400px]">{children}</div>
       <p className="mt-10 text-center text-xs text-muted-foreground">

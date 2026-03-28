@@ -98,3 +98,22 @@ async def upload_document(
         ),
     )
     return doc
+
+
+@router.delete("/{document_id}", status_code=204)
+async def delete_document(
+    workspace_id: UUID,
+    document_id: UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
+) -> None:
+    await assert_workspace_member(db, workspace_id, user_id)
+    doc = await db.get(Document, document_id)
+    if doc is None or doc.workspace_id != workspace_id:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    abs_path = Path(settings.upload_dir) / doc.storage_path
+    await db.delete(doc)
+    await db.commit()
+    if abs_path.is_file():
+        abs_path.unlink()

@@ -19,8 +19,8 @@ export function Sidebar({ onNavigate, className }: SidebarProps) {
 
   return (
     <div className={cn("flex h-full min-h-0 flex-col", className)}>
-      <div className="flex min-h-14 shrink-0 items-center border-b border-border/70 px-4 sm:px-5">
-        <Logo className="min-w-0 py-1" />
+      <div className="flex shrink-0 items-start border-b border-border/70 px-4 py-3 sm:px-5 sm:py-4">
+        <Logo className="min-w-0" />
       </div>
       <nav
         className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-3 py-4 sm:px-4"

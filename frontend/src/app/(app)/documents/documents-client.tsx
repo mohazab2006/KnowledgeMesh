@@ -54,6 +54,7 @@ export function DocumentsClient() {
   const [docs, setDocs] = useState<DocumentOut[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -98,6 +99,29 @@ export function DocumentsClient() {
       setError(err instanceof ApiError ? err.message : "Upload failed");
     } finally {
       setUploading(false);
+    }
+  };
+
+  const onDelete = async (doc: DocumentOut) => {
+    if (!activeId) return;
+    if (
+      !window.confirm(
+        `Remove “${doc.original_filename}” from this workspace? The file will be deleted.`,
+      )
+    ) {
+      return;
+    }
+    setDeletingId(doc.id);
+    setError(null);
+    try {
+      await apiFetch<void>(`v1/workspaces/${activeId}/documents/${doc.id}`, {
+        method: "DELETE",
+      });
+      await load();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Delete failed");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -185,6 +209,7 @@ export function DocumentsClient() {
                 <TableHead>Size</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Updated</TableHead>
+                <TableHead className="w-[100px] text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -203,6 +228,18 @@ export function DocumentsClient() {
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {formatUpdated(d.updated_at)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      disabled={deletingId !== null}
+                      onClick={() => void onDelete(d)}
+                    >
+                      {deletingId === d.id ? "Removing…" : "Delete"}
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}

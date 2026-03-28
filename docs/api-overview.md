@@ -16,6 +16,7 @@ Public HTTP entry (via NGINX): **`/api/*`** → **gateway service** (prefix stri
 | GET | `/v1/workspaces/{id}/documents` | Ingestion (via gateway) | List documents in workspace |
 | POST | `/v1/workspaces/{id}/documents` | Ingestion (via gateway) | Multipart upload (`file` field); enqueues Redis job stub |
 | GET | `/v1/workspaces/{id}/documents/{document_id}` | Ingestion (via gateway) | Document metadata |
+| DELETE | `/v1/workspaces/{id}/documents/{document_id}` | Ingestion (via gateway) | Remove row + stored file (member only) |
 
 ## Planned (later milestones)
 
