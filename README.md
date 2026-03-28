@@ -35,4 +35,3 @@ This README describes the **whole product**, not a single milestone. **Milestone
 - [`docs/architecture.md`](docs/architecture.md) — architecture notes  
 - [`docs/api-overview.md`](docs/api-overview.md) — API direction  
 - [`docs/decisions.md`](docs/decisions.md) — decision log  
-
