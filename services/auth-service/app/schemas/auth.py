@@ -27,3 +27,23 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserPublic
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ForgotPasswordResponse(BaseModel):
+    """Generic detail avoids email enumeration. dev_reset_token is set only in dev when configured."""
+
+    detail: str
+    dev_reset_token: str | None = None
+
+
+class ResetPasswordRequest(BaseModel):
+    token: Annotated[str, Field(min_length=10, max_length=512)]
+    new_password: Annotated[str, Field(min_length=8, max_length=72)]
+
+
+class ResetPasswordResponse(BaseModel):
+    detail: str

@@ -26,3 +26,6 @@ class User(Base):
     memberships: Mapped[list["WorkspaceMembership"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
+    password_reset_tokens: Mapped[list["PasswordResetToken"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )

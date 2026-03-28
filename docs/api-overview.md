@@ -9,6 +9,8 @@ Public HTTP entry (via NGINX): **`/api/*`** → **gateway service** (prefix stri
 | GET | `/health` | Gateway, Auth, … | Liveness (`HealthResponse`) |
 | POST | `/v1/auth/register` | Auth (via gateway) | Create user, default **Personal** workspace, JWT |
 | POST | `/v1/auth/login` | Auth | Email/password → JWT |
+| POST | `/v1/auth/forgot-password` | Auth | Request reset; email if SMTP configured, else optional `dev_reset_token` when enabled |
+| POST | `/v1/auth/reset-password` | Auth | Body `{ token, new_password }` — consumes one-time token |
 | GET | `/v1/auth/me` | Auth | Current user (Bearer JWT) |
 | GET | `/v1/workspaces` | Auth | List workspaces for caller |
 | POST | `/v1/workspaces` | Auth | Create workspace (caller = owner) |

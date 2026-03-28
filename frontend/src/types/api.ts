@@ -4,6 +4,15 @@ export type UserPublic = {
   display_name: string | null;
 };
 
+export type ForgotPasswordResponse = {
+  detail: string;
+  dev_reset_token: string | null;
+};
+
+export type ResetPasswordResponse = {
+  detail: string;
+};
+
 export type TokenResponse = {
   access_token: string;
   token_type: string;

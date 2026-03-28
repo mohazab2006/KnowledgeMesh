@@ -81,3 +81,11 @@ Format: short ADR-style entries. New decisions are appended with a date.
 **Context:** Users need a single authenticated workspace query that combines vector retrieval and grounded generation without collapsing services into one binary.  
 **Decision:** **`POST /v1/workspaces/{id}/query`** is implemented **on the gateway**: it forwards **`Authorization`** to **retrieval-service** **`POST .../search`** (OpenAI query embedding + pgvector `<=>` over **`document_chunks`** joined to **`documents`** for titles), then calls **llm-service** **`POST /v1/rag/complete`** with retrieved chunks (no end-user JWT on llm; internal HTTP only). Response merges **relevance distance** from retrieval into citations.  
 **Consequences:** Gateway must start after retrieval and llm in Compose; **`RETRIEVAL_SERVICE_URL`** / **`LLM_SERVICE_URL`** required; query and index embedding **model + dimension** must stay aligned. LLM is not exposed as a public authenticated surface—only the gateway calls it.
+
+---
+
+### ADR-011 — Password reset tokens + optional SMTP (2026-03-28)
+
+**Context:** Users need to recover access without database surgery; email is the standard channel but local dev often has no mail server.  
+**Decision:** **`password_reset_tokens`** table stores **SHA-256** of a random token, **`POST /v1/auth/forgot-password`** always returns the same generic message shape, **`POST /v1/auth/reset-password`** consumes the token. **Optional SMTP** (`SMTP_*` + **`FRONTEND_PUBLIC_URL`**) sends a link to **`/reset-password?token=`**. When SMTP is unset, **`PASSWORD_RESET_RETURN_TOKEN=true`** may include **`dev_reset_token`** in the JSON response (disabled in production).  
+**Consequences:** Dev mode can leak account existence via **`dev_reset_token`** presence—acceptable only when the flag is explicitly on. Operators must set **`PASSWORD_RESET_RETURN_TOKEN=false`** and configure SMTP for real deployments.
