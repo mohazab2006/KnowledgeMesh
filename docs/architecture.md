@@ -15,7 +15,9 @@ The repository is a **monorepo**: one Git history, multiple deployable units. Py
 
 - **Browser → NGINX → Next.js** for UI assets and navigation.  
 - **Browser → NGINX → `/api/...` → gateway** for API calls; NGINX strips the `/api` prefix when forwarding to the gateway so internal routes stay **`/v1/...`**.  
-- **Gateway → auth service** for **`/v1/auth/*`** and **`/v1/workspaces/*`** (HTTP reverse proxy); additional `/v1` prefixes will target ingestion, retrieval, and LLM services as milestones land.  
+- **Gateway → auth service** for **`/v1/auth/*`** and **`/v1/workspaces/*`** except the **documents** subtree (HTTP reverse proxy).  
+- **Gateway → ingestion service** for **`/v1/workspaces/{id}/documents`** (list, upload, detail); same JWT and membership rules as other workspace APIs.  
+- **Retrieval / query / LLM** routes will attach to the gateway the same way as milestones land.  
 - **Local dev:** `next dev` rewrites **`/api/*`** to the gateway so the UI can use relative `/api` URLs without CORS.  
 
 ## Data stores

@@ -33,14 +33,15 @@ def _filter_headers(headers) -> dict[str, str]:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    async with httpx.AsyncClient(timeout=60.0) as client:
+    timeout = httpx.Timeout(600.0, connect=30.0)
+    async with httpx.AsyncClient(timeout=timeout) as client:
         app.state.http = client
         yield
 
 
 app = FastAPI(
     title="KnowledgeMesh API Gateway",
-    version="0.2.0",
+    version="0.3.0",
     lifespan=lifespan,
 )
 
@@ -50,8 +51,14 @@ def health() -> HealthResponse:
     return HealthResponse(service=settings.service_name)
 
 
-async def _forward(request: Request, upstream_path: str) -> Response:
-    base = settings.auth_service_url.rstrip("/")
+async def _forward(
+    request: Request,
+    upstream_path: str,
+    *,
+    base_url: str,
+    service_label: str,
+) -> Response:
+    base = base_url.rstrip("/")
     url = f"{base}/{upstream_path}"
     q = request.url.query
     if q:
@@ -68,7 +75,9 @@ async def _forward(request: Request, upstream_path: str) -> Response:
     except httpx.RequestError as exc:
         return JSONResponse(
             status_code=502,
-            content={"detail": f"Upstream auth service unreachable: {exc!s}"},
+            content={
+                "detail": f"Upstream {service_label} unreachable: {exc!s}",
+            },
         )
     out_headers = {
         k: v
@@ -86,14 +95,56 @@ async def _forward(request: Request, upstream_path: str) -> Response:
 
 @app.api_route("/v1/auth/{path:path}", methods=_METHODS)
 async def proxy_auth(request: Request, path: str) -> Response:
-    return await _forward(request, f"v1/auth/{path}")
+    return await _forward(
+        request,
+        f"v1/auth/{path}",
+        base_url=settings.auth_service_url,
+        service_label="auth service",
+    )
 
 
 @app.api_route("/v1/workspaces", methods=_METHODS)
 async def proxy_workspaces_root(request: Request) -> Response:
-    return await _forward(request, "v1/workspaces")
+    return await _forward(
+        request,
+        "v1/workspaces",
+        base_url=settings.auth_service_url,
+        service_label="auth service",
+    )
+
+
+@app.api_route("/v1/workspaces/{workspace_id}/documents/{path:path}", methods=_METHODS)
+async def proxy_workspace_documents_sub(
+    request: Request,
+    workspace_id: str,
+    path: str,
+) -> Response:
+    return await _forward(
+        request,
+        f"v1/workspaces/{workspace_id}/documents/{path}",
+        base_url=settings.ingestion_service_url,
+        service_label="ingestion service",
+    )
+
+
+@app.api_route("/v1/workspaces/{workspace_id}/documents", methods=_METHODS)
+async def proxy_workspace_documents(
+    request: Request,
+    workspace_id: str,
+) -> Response:
+    return await _forward(
+        request,
+        f"v1/workspaces/{workspace_id}/documents",
+        base_url=settings.ingestion_service_url,
+        service_label="ingestion service",
+    )
 
 
 @app.api_route("/v1/workspaces/{path:path}", methods=_METHODS)
 async def proxy_workspaces_sub(request: Request, path: str) -> Response:
-    return await _forward(request, f"v1/workspaces/{path}")
+    return await _forward(
+        request,
+        f"v1/workspaces/{path}",
+        base_url=settings.auth_service_url,
+        service_label="auth service",
+    )

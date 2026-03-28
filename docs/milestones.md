@@ -5,7 +5,7 @@
 | 0 | Foundation | **Complete** | Monorepo layout, Next.js app, FastAPI service stubs, shared health schema, Docker Compose + NGINX skeleton, README and docs |
 | 1 | Design system + UI foundation | **Complete** | App shell (sidebar + header), Tailwind tokens, UI primitives, auth pages UI, dashboard/documents/query layouts, empty/loading/error patterns |
 | 2 | Auth + workspace domain | **Complete** | Auth service + Postgres models, bcrypt + JWT, workspace CRUD/membership, gateway proxy, Next.js auth/workspace context, protected app shell, localStorage token |
-| 3 | Document management + upload | Planned | Models, upload API, list/detail UI, status badges, job registration |
+| 3 | Document management + upload | **Complete** | `documents` table, ingestion upload/list/detail, Redis enqueue stub, gateway split-routing, Documents UI |
 | 4 | Async ingestion pipeline | Planned | Redis queue, worker extraction/chunking/embedding, pgvector persistence, retries |
 | 5 | Retrieval + RAG query flow | Planned | Retrieval + LLM integration, citations, query UI |
 | 6 | UX polish + performance | Planned | Loading/error/empty states, cache where useful, responsive polish |
@@ -35,6 +35,13 @@
 - **Frontend** stores the bearer token in **`localStorage`** (`km_access_token`) and active workspace in **`km_workspace_id`**; **`AuthGate`** protects `(app)/` routes.  
 - **Next.js** `rewrites()` forwards `/api/*` to the gateway during `next dev` so the browser stays same-origin.
 
+## Milestone 3 — decisions
+
+- **Ingestion service** creates the **`documents`** table (SQLAlchemy `create_all`) with FKs to **`users`** and **`workspaces`**; Compose starts **auth** before **ingestion** so base tables exist.  
+- **Authorization** reuses **HS256 JWT** (`sub` = user id); **workspace membership** is checked with a **parameterized SQL** query against **`workspace_memberships`** (no duplicated user/workspace ORM in ingestion).  
+- **Files** live under **`UPLOAD_DIR` / `{workspace_id}` / `{document_id}{ext}`**; **Redis** list **`km:ingestion:jobs`** receives a JSON payload for the future worker (Milestone 4).  
+- **Gateway** registers **`/v1/workspaces/{id}/documents`** routes **before** the **`/v1/workspaces/{path}`** catch-all so traffic fans out correctly; **httpx** timeout raised for large uploads; **NGINX** **`client_max_body_size 100m`** on **`/api/`**.
+
 ## Next up
 
-**Milestone 3:** Document models, upload API, ingestion hand-off, document list UI wired to real data.
+**Milestone 4:** Worker consumes the queue, extraction/chunking/embedding, pgvector persistence, retries.

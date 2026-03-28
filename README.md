@@ -27,7 +27,7 @@ End-state we’re building toward (see milestones for what’s live today):
 
 ## Where we are now
 
-This README describes the **whole product**, not a single milestone. **Milestones 0–2** are done: foundation, **UI shell**, then **real auth** (FastAPI + Postgres + JWT), **workspaces**, **gateway proxy**, and a **protected** app with workspace switching. **OpenAI / embeddings / end-to-end RAG** follow in **later milestones**. Details: [`docs/milestones.md`](docs/milestones.md).
+This README describes the **whole product**, not a single milestone. **Milestones 0–3** are done: through **document upload** (ingestion service, gateway routing to it, **Documents** UI, Redis job stub). **Worker processing, vectors, and OpenAI-backed RAG** follow in **later milestones**. Details: [`docs/milestones.md`](docs/milestones.md).
 
 ## Engineers: go deeper
 

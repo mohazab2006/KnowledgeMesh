@@ -13,10 +13,12 @@ Public HTTP entry (via NGINX): **`/api/*`** → **gateway service** (prefix stri
 | GET | `/v1/workspaces` | Auth | List workspaces for caller |
 | POST | `/v1/workspaces` | Auth | Create workspace (caller = owner) |
 | GET | `/v1/workspaces/{id}` | Auth | Workspace detail if member |
+| GET | `/v1/workspaces/{id}/documents` | Ingestion (via gateway) | List documents in workspace |
+| POST | `/v1/workspaces/{id}/documents` | Ingestion (via gateway) | Multipart upload (`file` field); enqueues Redis job stub |
+| GET | `/v1/workspaces/{id}/documents/{document_id}` | Ingestion (via gateway) | Document metadata |
 
 ## Planned (later milestones)
 
-- **`/v1/workspaces/{id}/documents/*`** — upload, list, status (ingestion)  
 - **`/v1/workspaces/{id}/query`** — RAG query; gateway orchestrates retrieval + LLM  
 
-OpenAPI: hit **`/docs`** on each service’s **direct** port during development; the gateway currently **proxies** auth paths without merging OpenAPI.
+OpenAPI: hit **`/docs`** on each service’s **direct** port during development; the gateway **proxies** paths to auth and ingestion without merging OpenAPI.

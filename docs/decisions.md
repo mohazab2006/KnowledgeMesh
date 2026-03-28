@@ -57,3 +57,11 @@ Format: short ADR-style entries. New decisions are appended with a date.
 **Context:** Secret scanners (e.g. GitGuardian) flag **default passwords** and **JWT placeholders** committed in `docker-compose.yml`, `.env.example`, or Python defaults.  
 **Decision:** Require **`POSTGRES_*`**, **`JWT_SECRET`**, and **`DATABASE_URL`** via a **local `.env`** (gitignored). Compose uses `${VAR:?message}` where substitution is needed; **`.env.example` uses empty values** and comments only. Auth **Settings** has **no default** for `database_url` or `jwt_secret`.  
 **Consequences:** `docker compose up` fails until `.env` exists; developers copy `.env.example` and fill secrets. **If secrets were ever pushed, rotate them** and consider **history rewrite** (`git filter-repo` / BFG) because scanners and clones may still see old commits. Procedure notes: [`git-history-secret-scrub.md`](git-history-secret-scrub.md).
+
+---
+
+### ADR-008 — Ingestion owns documents; gateway path split (Milestone 3) (2026-03-28)
+
+**Context:** Workspace-scoped uploads need persistence and a queue hand-off without folding file I/O into the auth service.  
+**Decision:** Add **ingestion-service** with **`documents`** rows + on-disk files under **`UPLOAD_DIR`**, **JWT + membership** checks aligned with auth, **Redis** enqueue for a future worker. The **gateway** proxies **`/v1/workspaces/{id}/documents*`** to ingestion and keeps **`/v1/workspaces`** (non-document paths) on auth; **document routes are registered before** the workspace catch-all.  
+**Consequences:** Two services touch “workspace” URLs; ordering in the gateway must stay correct. File storage uses a named Docker volume in Compose; NGINX raises upload size on **`/api/`**.

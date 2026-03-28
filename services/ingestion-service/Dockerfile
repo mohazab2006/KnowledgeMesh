@@ -9,7 +9,6 @@ ENV PYTHONUNBUFFERED=1
 COPY services/ingestion-service/requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
-COPY shared /app/shared
 COPY services/ingestion-service/app /app/app
 
 EXPOSE 8000

@@ -76,3 +76,43 @@ export async function apiFetch<T>(
   }
   return data as T;
 }
+
+/** Multipart upload: do not set Content-Type (browser sets boundary). */
+export async function apiUpload<T>(
+  path: string,
+  formData: FormData,
+  init: Omit<RequestInit, "body" | "method"> = {},
+): Promise<T> {
+  const url = path.startsWith("http")
+    ? path
+    : `${API_PREFIX}/${path.replace(/^\//, "")}`;
+  const headers = new Headers(init.headers);
+  const token = getStoredToken();
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  const res = await fetch(url, {
+    method: "POST",
+    ...init,
+    headers,
+    body: formData,
+  });
+  const text = await res.text();
+  let data: unknown = undefined;
+  if (text) {
+    try {
+      data = JSON.parse(text) as unknown;
+    } catch {
+      data = text;
+    }
+  }
+  if (!res.ok) {
+    const msg =
+      typeof data === "object" &&
+      data !== null &&
+      "detail" in data &&
+      typeof (data as ApiErrorBody).detail === "string"
+        ? ((data as ApiErrorBody).detail as string)
+        : res.statusText;
+    throw new ApiError(res.status, msg || "Request failed", data);
+  }
+  return data as T;
+}
