@@ -15,6 +15,7 @@ const titles: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/documents": "Documents",
   "/query": "Query",
+  "/workspaces/new": "New workspace",
 };
 
 function titleForPath(pathname: string) {

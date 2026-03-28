@@ -1,18 +1,22 @@
 # API overview
 
-Public HTTP entry (via NGINX): **`/api/*`** → **gateway service** (prefix stripped).
+Public HTTP entry (via NGINX): **`/api/*`** → **gateway service** (prefix stripped). Local Next.js dev uses **`/api/*` rewrites** to the gateway (see `GATEWAY_INTERNAL_URL` in `.env.example`).
 
-## Current (Milestone 0)
+## Live (Milestone 2)
 
-| Method | Path | Service | Description |
-|--------|------|---------|-------------|
-| GET | `/health` | All services | Liveness; JSON `HealthResponse` |
+| Method | Path | Routed to | Description |
+|--------|------|-----------|-------------|
+| GET | `/health` | Gateway, Auth, … | Liveness (`HealthResponse`) |
+| POST | `/v1/auth/register` | Auth (via gateway) | Create user, default **Personal** workspace, JWT |
+| POST | `/v1/auth/login` | Auth | Email/password → JWT |
+| GET | `/v1/auth/me` | Auth | Current user (Bearer JWT) |
+| GET | `/v1/workspaces` | Auth | List workspaces for caller |
+| POST | `/v1/workspaces` | Auth | Create workspace (caller = owner) |
+| GET | `/v1/workspaces/{id}` | Auth | Workspace detail if member |
 
-## Planned surface (evolving)
+## Planned (later milestones)
 
-- **`/v1/auth/*`** — register, login, refresh, workspace membership checks (gateway → auth service)  
-- **`/v1/workspaces/*`** — workspace CRUD and membership  
-- **`/v1/workspaces/{id}/documents/*`** — upload, list, status (gateway → ingestion)  
-- **`/v1/workspaces/{id}/query`** — ask question; gateway orchestrates retrieval + LLM  
+- **`/v1/workspaces/{id}/documents/*`** — upload, list, status (ingestion)  
+- **`/v1/workspaces/{id}/query`** — RAG query; gateway orchestrates retrieval + LLM  
 
-OpenAPI: each FastAPI app exposes `/docs` on its **direct** port during development; the gateway will aggregate or proxy documented contracts in a later milestone.
+OpenAPI: hit **`/docs`** on each service’s **direct** port during development; the gateway currently **proxies** auth paths without merging OpenAPI.

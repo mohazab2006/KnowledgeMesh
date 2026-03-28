@@ -31,6 +31,7 @@ services:
       dockerfile: services/gateway-service/Dockerfile
     environment:
       ENVIRONMENT: ${ENVIRONMENT:-development}
+      AUTH_SERVICE_URL: http://auth-service:8000
     ports:
       - "${GATEWAY_PORT:-8000}:8000"
     depends_on:
@@ -38,6 +39,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      auth-service:
+        condition: service_started
 
   auth-service:
     build:
@@ -45,6 +48,8 @@ services:
       dockerfile: services/auth-service/Dockerfile
     environment:
       ENVIRONMENT: ${ENVIRONMENT:-development}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-km_local_dev}:${POSTGRES_PASSWORD:-km_local_dev}@postgres:5432/${POSTGRES_DB:-km_local_dev}
+      JWT_SECRET: ${JWT_SECRET:-JWT_PLACEHOLDER_REMOVED}
     ports:
       - "${AUTH_SERVICE_PORT:-8001}:8000"
     depends_on:

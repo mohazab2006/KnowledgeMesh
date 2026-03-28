@@ -48,8 +48,8 @@ flowchart LR
 | Path | Role |
 |------|------|
 | `frontend/` | UI: auth, workspaces, documents, query + citations |
-| `services/gateway-service/` | Public API aggregation and routing |
-| `services/auth-service/` | Users, JWT, workspace roles |
+| `services/gateway-service/` | Public API edge; **proxies** `/v1/auth/*` and `/v1/workspaces/*` to auth (more prefixes later) |
+| `services/auth-service/` | Users, bcrypt passwords, JWT, workspaces, memberships (SQLAlchemy + asyncpg) |
 | `services/ingestion-service/` | Uploads, metadata, job enqueue |
 | `services/worker-service/` | Async indexing pipeline |
 | `services/retrieval-service/` | Vector search and context retrieval |
@@ -78,8 +78,10 @@ Retrieval and generation are separate services so scaling, caching, and provider
 - **`app/`** — App Router: `(marketing)/` (landing), `(auth)/` (login, register), `(app)/` (shell + dashboard, documents, query).  
 - **`components/ui/`** — Design-system primitives: `Button`, `Input`, `Label`, `Textarea`, `Card`, `Table`, `Badge`, `Spinner`, `EmptyState`, `LoadingState`, `ErrorState`.  
 - **`components/app/`** — Shell: `AppShell`, `Sidebar`, `AppHeader`, `Logo`, `QueryForm`.  
-- **`components/auth/`** — Client auth forms (Milestone 2 will connect to APIs).  
-- **`lib/`** — `cn()` helper, `nav` config.
+- **`components/auth/`** — Login/register forms, **`AuthGate`** for protected routes.  
+- **`contexts/`** — **`AuthProvider`** (token + `/v1/auth/me`), **`WorkspaceProvider`** (list + active workspace).  
+- **`lib/api.ts`** — `apiFetch` to **`/api/...`** (dev rewrites → gateway).  
+- **`lib/`** — `cn()`, `nav` config.
 
 ## Repository layout
 

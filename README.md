@@ -27,7 +27,7 @@ End-state we’re building toward (see milestones for what’s live today):
 
 ## Where we are now
 
-This README describes the **whole product**, not a single milestone. **Milestones 0–1** are done: monorepo and services foundation, then a **premium UI shell**, **design tokens**, **reusable primitives**, and **auth pages** (UI only). **Milestone 2** adds real **auth and workspaces**. **OpenAI / embeddings / end-to-end RAG** follow in **later milestones**. Details: [`docs/milestones.md`](docs/milestones.md).
+This README describes the **whole product**, not a single milestone. **Milestones 0–2** are done: foundation, **UI shell**, then **real auth** (FastAPI + Postgres + JWT), **workspaces**, **gateway proxy**, and a **protected** app with workspace switching. **OpenAI / embeddings / end-to-end RAG** follow in **later milestones**. Details: [`docs/milestones.md`](docs/milestones.md).
 
 ## Engineers: go deeper
 

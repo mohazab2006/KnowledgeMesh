@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { appNav } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/app/logo";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/auth-context";
 
 type SidebarProps = {
   onNavigate?: () => void;
@@ -13,6 +15,7 @@ type SidebarProps = {
 
 export function Sidebar({ onNavigate, className }: SidebarProps) {
   const pathname = usePathname();
+  const { logout, user } = useAuth();
 
   return (
     <div className={cn("flex h-full flex-col", className)}>
@@ -39,11 +42,30 @@ export function Sidebar({ onNavigate, className }: SidebarProps) {
             </Link>
           );
         })}
+        <Link
+          href="/workspaces/new"
+          onClick={onNavigate}
+          className={cn(
+            "rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground",
+            pathname === "/workspaces/new" && "bg-muted text-foreground",
+          )}
+        >
+          New workspace
+        </Link>
       </nav>
       <div className="mt-auto border-t border-border p-4">
-        <p className="text-xs text-muted-foreground">
-          Workspace controls and account settings ship in Milestone 2.
+        <p className="truncate text-xs font-medium text-foreground">
+          {user?.email}
         </p>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="mt-3 w-full justify-start px-2 text-muted-foreground"
+          onClick={() => logout()}
+        >
+          Sign out
+        </Button>
       </div>
     </div>
   );

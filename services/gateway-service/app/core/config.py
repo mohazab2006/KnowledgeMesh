@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     service_name: str = "gateway-service"
     environment: str = "development"
     port: int = 8000
+    auth_service_url: str = "http://127.0.0.1:8001"
 
 
 settings = Settings()

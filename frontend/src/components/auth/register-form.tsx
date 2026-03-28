@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,23 +14,50 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ErrorState } from "@/components/ui/error-state";
+import { useAuth } from "@/contexts/auth-context";
+import { ApiError } from "@/lib/api";
 
 export function RegisterForm() {
+  const router = useRouter();
+  const { register, token, user, ready } = useAuth();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+
+  useEffect(() => {
+    if (ready && token && user) {
+      router.replace("/dashboard");
+    }
+  }, [ready, token, user, router]);
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setPending(true);
+    try {
+      await register(email, password, name || null);
+      router.push("/dashboard");
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Registration failed");
+    } finally {
+      setPending(false);
+    }
+  }
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Create account</CardTitle>
         <CardDescription>
-          Start a workspace and invite collaborators in later milestones.
+          You will get a personal workspace automatically; add more anytime.
         </CardDescription>
       </CardHeader>
-      <form
-        action="#"
-        onSubmit={(e) => {
-          e.preventDefault();
-        }}
-      >
+      <form onSubmit={onSubmit}>
         <CardContent className="space-y-4">
+          {error ? <ErrorState message={error} /> : null}
           <div className="space-y-2">
             <Label htmlFor="name">Display name</Label>
             <Input
@@ -37,6 +66,8 @@ export function RegisterForm() {
               type="text"
               autoComplete="name"
               placeholder="Alex Chen"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
             />
           </div>
           <div className="space-y-2">
@@ -47,6 +78,8 @@ export function RegisterForm() {
               type="email"
               autoComplete="email"
               placeholder="you@company.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
@@ -57,14 +90,18 @@ export function RegisterForm() {
               name="password"
               type="password"
               autoComplete="new-password"
-              placeholder="••••••••"
+              placeholder="At least 8 characters"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               required
+              minLength={8}
+              maxLength={72}
             />
           </div>
         </CardContent>
         <CardFooter className="flex flex-col gap-3 border-0 pt-2">
-          <Button type="submit" className="w-full">
-            Create account
+          <Button type="submit" className="w-full" disabled={pending}>
+            {pending ? "Creating account…" : "Create account"}
           </Button>
           <p className="text-center text-sm text-muted-foreground">
             Already registered?{" "}

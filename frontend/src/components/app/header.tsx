@@ -1,6 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useWorkspace } from "@/contexts/workspace-context";
+import { cn } from "@/lib/utils";
 
 type AppHeaderProps = {
   title: string;
@@ -8,6 +11,8 @@ type AppHeaderProps = {
 };
 
 export function AppHeader({ title, onMenuClick }: AppHeaderProps) {
+  const { active, workspaces, loading, setActiveWorkspace } = useWorkspace();
+
   return (
     <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-4 border-b border-border bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80 md:px-8">
       <Button
@@ -25,8 +30,47 @@ export function AppHeader({ title, onMenuClick }: AppHeaderProps) {
           {title}
         </h1>
         <p className="truncate text-xs text-muted-foreground">
-          Default workspace · RAG preview
+          {active ? (
+            <>
+              {active.name}
+              <span className="text-muted-foreground/70"> · </span>
+              <span className="capitalize">{active.role}</span>
+            </>
+          ) : loading ? (
+            "Loading workspaces…"
+          ) : (
+            "Select a workspace"
+          )}
         </p>
+      </div>
+      <div className="flex shrink-0 items-center gap-2">
+        <label className="sr-only" htmlFor="workspace-select">
+          Active workspace
+        </label>
+        <select
+          id="workspace-select"
+          className={cn(
+            "h-9 max-w-[200px] cursor-pointer truncate rounded-md border border-border bg-card px-2 text-xs font-medium text-foreground shadow-sm",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:max-w-[240px]",
+          )}
+          value={active?.id ?? ""}
+          disabled={loading || workspaces.length === 0}
+          onChange={(e) => {
+            if (e.target.value) setActiveWorkspace(e.target.value);
+          }}
+        >
+          {workspaces.length === 0 ? (
+            <option value="">No workspaces</option>
+          ) : null}
+          {workspaces.map((w) => (
+            <option key={w.id} value={w.id}>
+              {w.name}
+            </option>
+          ))}
+        </select>
+        <Button variant="secondary" size="sm" className="hidden sm:inline-flex" asChild>
+          <Link href="/workspaces/new">New workspace</Link>
+        </Button>
       </div>
     </header>
   );
