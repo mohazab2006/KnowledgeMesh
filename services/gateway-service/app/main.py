@@ -415,7 +415,7 @@ async def workspace_rag_query_stream(
     workspace_id: str,
     body: WorkspaceQueryRequest,
     request: Request,
-) -> StreamingResponse | JSONResponse:
+) -> Response:
     auth = request.headers.get("authorization") or request.headers.get(
         "Authorization",
     )
