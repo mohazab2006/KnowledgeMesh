@@ -8,7 +8,7 @@ Team knowledge lives in PDFs, specs, and policies, but **getting an answer** sti
 
 ## What you’re looking at
 
-A **multi-service RAG platform** (not a single-process demo): a **gateway** orchestrates **auth**, **ingestion**, **retrieval**, and **LLM** services. **PostgreSQL + pgvector** holds identities, workspaces, documents, and chunk embeddings; **Redis** backs the ingestion queue. A **worker** pulls jobs, extracts text, chunks, embeds, and writes vectors. Queries run **retrieve → generate**: top‑k chunks feed an LLM that returns **JSON** with **`answer`** + **`cited_indices`**; the gateway merges **citation metadata** for the UI.
+A **multi-service RAG platform**: a **gateway** orchestrates **auth**, **ingestion**, **retrieval**, and **LLM** services. **PostgreSQL + pgvector** holds identities, workspaces, documents, and chunk embeddings; **Redis** backs the ingestion queue. A **worker** pulls jobs, extracts text, chunks, embeds, and writes vectors. Queries run **retrieve → generate**: top‑k chunks feed an LLM that returns **JSON** with **`answer`** + **`cited_indices`**; the gateway merges **citation metadata** for the UI.
 
 **Edge:** NGINX serves the **Next.js** app and proxies **`/api/*`** to the gateway (the **`/api`** prefix is stripped so internal routes stay **`/v1/...`**). **Docker Compose** is the reference way to run the full stack, with **health-gated** startup so cold **502**s are rare.
 
@@ -44,5 +44,3 @@ This repo is a **strong portfolio / demo** of RAG architecture and service bound
 | [`docs/repository-structure.md`](docs/repository-structure.md) | Repo map, RAG sequence |
 | [`docs/api-overview.md`](docs/api-overview.md) | HTTP surface |
 | [`docs/decisions.md`](docs/decisions.md) | ADRs |
-
-Cursor / automation context: [`AGENTS.md`](AGENTS.md).
