@@ -58,7 +58,7 @@ export default function MarketingPage() {
       <NeuralMeshBackground />
 
       <div className="relative z-10">
-        <header className="sticky top-0 z-50 flex items-center justify-between border-b border-border/60 bg-background/80 px-5 py-3.5 backdrop-blur-md supports-[backdrop-filter]:bg-background/65 md:px-10">
+        <header className="sticky top-0 z-50 flex items-center justify-between border-b border-border/60 bg-background/80 px-5 py-3.5 backdrop-blur-md supports-backdrop-filter:bg-background/65 md:px-10">
           <Link
             href="/"
             className="flex items-center gap-3 outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
@@ -85,9 +85,9 @@ export default function MarketingPage() {
         </header>
 
         {/* Hero */}
-        <section className="relative flex min-h-[100dvh] flex-col items-center justify-center px-6 pb-24 pt-8 md:px-10">
+        <section className="relative flex min-h-dvh flex-col items-center justify-center px-6 pb-24 pt-8 md:px-10">
           <div
-            className="pointer-events-none absolute inset-0 bg-gradient-to-b from-background/30 via-background/10 to-background"
+            className="pointer-events-none absolute inset-0 bg-linear-to-b from-background/18 via-background/5 to-background"
             aria-hidden
           />
           <div className="relative mx-auto flex w-full max-w-3xl flex-col items-center text-center">

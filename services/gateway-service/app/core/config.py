@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     ingestion_service_url: str = "http://127.0.0.1:8002"
     retrieval_service_url: str = "http://127.0.0.1:8003"
     llm_service_url: str = "http://127.0.0.1:8004"
+    # Per-IP sliding window for POST /v1/workspaces/{id}/query (60s window).
+    query_rate_limit_per_minute: int = 30
 
 
 settings = Settings()

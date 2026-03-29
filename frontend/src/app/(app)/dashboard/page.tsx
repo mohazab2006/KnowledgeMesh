@@ -8,10 +8,11 @@ export const metadata: Metadata = {
 
 export default function DashboardPage() {
   return (
-    <div className="space-y-10">
+    <div className="space-y-10 md:space-y-12">
       <PageHeader
+        size="lg"
         title="Overview"
-        description="Document activity for the workspace selected in the header."
+        description="Document activity for the workspace selected in the header. Numbers refresh when you change workspace."
       />
 
       <DashboardMetrics />

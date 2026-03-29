@@ -8,6 +8,9 @@ from app.api.routes import documents
 from app.core.config import settings
 from app.db.session import init_db
 from app.models import document  # noqa: F401 — register Document on Base.metadata
+from app.models.workspace_query_event import (  # noqa: F401 — register metadata
+    WorkspaceQueryEvent,
+)
 
 
 @asynccontextmanager

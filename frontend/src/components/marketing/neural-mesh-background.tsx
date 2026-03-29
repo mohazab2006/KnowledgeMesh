@@ -22,7 +22,7 @@ function drawFrame(
   nodeRgb: string,
 ) {
   ctx.clearRect(0, 0, w, h);
-  const maxDist = Math.min(140, w * 0.12);
+  const maxDist = Math.min(260, w * 0.22);
 
   for (let i = 0; i < nodes.length; i++) {
     for (let j = i + 1; j < nodes.length; j++) {
@@ -33,8 +33,8 @@ function drawFrame(
       const dist = Math.hypot(dx, dy);
       if (dist < maxDist && dist > 0) {
         const fade = 1 - dist / maxDist;
-        ctx.strokeStyle = `rgba(${lineRgb}, ${fade * 0.24})`;
-        ctx.lineWidth = 0.6;
+        ctx.strokeStyle = `rgba(${lineRgb}, ${fade * 0.4})`;
+        ctx.lineWidth = 1.15;
         ctx.beginPath();
         ctx.moveTo(a.x, a.y);
         ctx.lineTo(b.x, b.y);
@@ -44,12 +44,18 @@ function drawFrame(
   }
 
   for (const n of nodes) {
-    const g = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, 3.5);
-    g.addColorStop(0, `rgba(${nodeRgb}, 0.55)`);
+    const glowR = 7;
+    const g = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, glowR);
+    g.addColorStop(0, `rgba(${nodeRgb}, 0.72)`);
+    g.addColorStop(0.45, `rgba(${nodeRgb}, 0.28)`);
     g.addColorStop(1, `rgba(${nodeRgb}, 0)`);
     ctx.fillStyle = g;
     ctx.beginPath();
-    ctx.arc(n.x, n.y, 2.2, 0, Math.PI * 2);
+    ctx.arc(n.x, n.y, glowR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = `rgba(${nodeRgb}, 0.88)`;
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, 3.1, 0, Math.PI * 2);
     ctx.fill();
   }
 }
@@ -87,11 +93,11 @@ export function NeuralMeshBackground({ className }: { className?: string }) {
     function initNodes() {
       const area = w * h;
       const count = Math.min(
-        72,
-        Math.max(28, Math.floor(area / 22000)),
+        80,
+        Math.max(32, Math.floor(area / 19000)),
       );
       nodes = [];
-      const margin = 48;
+      const margin = 40;
       const mw = Math.max(0, w - margin * 2);
       const mh = Math.max(0, h - margin * 2);
       for (let i = 0; i < count; i++) {
@@ -184,7 +190,7 @@ export function NeuralMeshBackground({ className }: { className?: string }) {
     <canvas
       ref={canvasRef}
       className={cn(
-        "pointer-events-none fixed inset-0 z-0 h-full min-h-[100dvh] w-full",
+        "pointer-events-none fixed inset-0 z-0 h-full min-h-dvh w-full",
         className,
       )}
       aria-hidden

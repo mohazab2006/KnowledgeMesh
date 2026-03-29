@@ -105,3 +105,11 @@ Format: short ADR-style entries. New decisions are appended with a date.
 **Context:** On a cold **`docker compose up`**, browsers could hit **NGINX** while the gateway or backends were still booting, producing **502** responses and a poor demo experience.  
 **Decision:** Add **Docker healthchecks** to every long-running service (Python **`/health`**, frontend **`fetch`**, NGINX **`wget`**) and set **`depends_on`** with **`condition: service_healthy`** for **gateway** → **frontend** → **nginx** (and gateway’s upstream services). Use a YAML anchor (**`x-fastapi-healthcheck`**) for identical FastAPI probes.  
 **Consequences:** First start takes longer until all probes pass; **`start_period`** accommodates slow imports. Changing listen ports inside images requires updating healthcheck URLs.
+
+---
+
+### ADR-014 — Query analytics + gateway limits (Milestone 8 slice) (2026-03-28)
+
+**Context:** Dashboard **`queries_24h`** was a placeholder; abuse of **`POST .../query`** could spike cost.  
+**Decision:** **ingestion-service** owns append-only **`workspace_query_events`**; **`GET .../documents/stats`** counts rows in the last 24h. **Gateway** calls **`POST .../documents/query-events`** after each successful RAG response (including empty-chunk “no data” answers) and applies a **per-IP sliding-window** rate limit on **`POST .../query`** only (**`QUERY_RATE_LIMIT_PER_MINUTE`**, default 30). Request logging uses **`gateway.access`** at **INFO** (method, path, status, duration).  
+**Consequences:** Analytics require gateway → ingestion path; failed upstream calls are not logged as queries. Rate limits are in-memory (single gateway replica assumption for Compose).

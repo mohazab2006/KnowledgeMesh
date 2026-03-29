@@ -3,11 +3,12 @@ from __future__ import annotations
 import json
 import re
 import uuid
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, UploadFile
 from fastapi.responses import FileResponse
 from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,6 +17,7 @@ from app.core.config import settings
 from app.core.deps import assert_workspace_member, get_current_user_id
 from app.db.session import get_db
 from app.models.document import Document
+from app.models.workspace_query_event import WorkspaceQueryEvent
 from app.schemas.document import DocumentOut, WorkspaceDocumentStatsOut
 
 router = APIRouter()
@@ -102,11 +104,33 @@ async def workspace_document_stats(
             Document.status.in_(_PIPELINE_STATUSES),
         )
     )
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+    qcount = await db.scalar(
+        select(func.count())
+        .select_from(WorkspaceQueryEvent)
+        .where(
+            WorkspaceQueryEvent.workspace_id == workspace_id,
+            WorkspaceQueryEvent.created_at >= cutoff,
+        )
+    )
     return WorkspaceDocumentStatsOut(
         indexed_count=int(indexed or 0),
         processing_count=int(processing or 0),
-        queries_24h=None,
+        queries_24h=int(qcount or 0),
     )
+
+
+@router.post("/query-events", status_code=204)
+async def record_query_event(
+    workspace_id: UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
+) -> Response:
+    """Append-only log of a completed query (called by gateway after RAG)."""
+    await assert_workspace_member(db, workspace_id, user_id)
+    db.add(WorkspaceQueryEvent(workspace_id=workspace_id))
+    await db.commit()
+    return Response(status_code=204)
 
 
 def _response_media_type(doc: Document) -> str:

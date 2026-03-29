@@ -13,7 +13,9 @@ Milestone 5 is **done**: gateway **`POST /v1/workspaces/{id}/query`**, retrieval
 ## M8 direction (when you choose to implement)
 
 - Streaming answers, reranking, optional **Ollama** / local LLM path  
-- Query **analytics**, admin surfaces, stronger **DB least-privilege** per service  
+- Admin surfaces, stronger **DB least-privilege** per service  
+
+**Shipped (slice):** **`queries_24h`** from **`workspace_query_events`**; gateway **query rate limit** + access log; **auth layout** aligned with marketing (neural background + header).  
 
 ## Rules (project)
 

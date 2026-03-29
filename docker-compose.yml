@@ -160,6 +160,7 @@ services:
       INGESTION_SERVICE_URL: http://ingestion-service:8000
       RETRIEVAL_SERVICE_URL: http://retrieval-service:8000
       LLM_SERVICE_URL: http://llm-service:8000
+      QUERY_RATE_LIMIT_PER_MINUTE: ${QUERY_RATE_LIMIT_PER_MINUTE:-30}
     ports:
       - "${GATEWAY_PORT:-8000}:8000"
     healthcheck:

@@ -1,4 +1,10 @@
+from __future__ import annotations
+
+import logging
+import time
+from collections import defaultdict, deque
 from contextlib import asynccontextmanager
+from time import monotonic
 
 import httpx
 from fastapi import FastAPI, Request, Response
@@ -11,6 +17,8 @@ from app.schemas.query import (
     WorkspaceQueryResponse,
 )
 from shared.schemas.health import HealthResponse
+
+logger = logging.getLogger("gateway.access")
 
 _HOP_BY_HOP = {
     "connection",
@@ -28,12 +36,72 @@ _HOP_BY_HOP = {
 _METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]
 
 
+class _SlidingWindowLimiter:
+    """Per-key sliding window (monotonic clock)."""
+
+    def __init__(self, max_requests: int, window_sec: float) -> None:
+        self.max_requests = max_requests
+        self.window_sec = window_sec
+        self._hits: dict[str, deque[float]] = defaultdict(deque)
+
+    def allow(self, key: str) -> bool:
+        now = monotonic()
+        dq = self._hits[key]
+        while dq and now - dq[0] > self.window_sec:
+            dq.popleft()
+        if len(dq) >= self.max_requests:
+            return False
+        dq.append(now)
+        return True
+
+
+_query_limiter = _SlidingWindowLimiter(
+    max(1, settings.query_rate_limit_per_minute),
+    60.0,
+)
+
+
+def _client_ip(request: Request) -> str:
+    xff = request.headers.get("x-forwarded-for")
+    if xff:
+        return xff.split(",")[0].strip()
+    if request.client:
+        return request.client.host
+    return "unknown"
+
+
+def _is_rag_query_post(request: Request) -> bool:
+    if request.method != "POST":
+        return False
+    parts = request.url.path.strip("/").split("/")
+    return (
+        len(parts) >= 4
+        and parts[0] == "v1"
+        and parts[1] == "workspaces"
+        and parts[-1] == "query"
+    )
+
+
 def _filter_headers(headers) -> dict[str, str]:
     return {
         k: v
         for k, v in headers.items()
         if k.lower() not in _HOP_BY_HOP
     }
+
+
+async def _record_query_event(
+    http: httpx.AsyncClient, workspace_id: str, auth: str,
+) -> None:
+    ing = settings.ingestion_service_url.rstrip("/")
+    try:
+        await http.post(
+            f"{ing}/v1/workspaces/{workspace_id}/documents/query-events",
+            headers={"Authorization": auth},
+            timeout=5.0,
+        )
+    except Exception:
+        pass
 
 
 @asynccontextmanager
@@ -46,9 +114,34 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="KnowledgeMesh API Gateway",
-    version="0.4.0",
+    version="0.5.0",
     lifespan=lifespan,
 )
+
+
+@app.middleware("http")
+async def access_log_and_rate_limit(request: Request, call_next):
+    if request.url.path == "/health":
+        return await call_next(request)
+    if _is_rag_query_post(request) and not _query_limiter.allow(
+        _client_ip(request),
+    ):
+        return JSONResponse(
+            status_code=429,
+            content={"detail": "Too many queries. Try again in a minute."},
+            headers={"Retry-After": "60"},
+        )
+    start = time.perf_counter()
+    response = await call_next(request)
+    ms = (time.perf_counter() - start) * 1000
+    logger.info(
+        "%s %s %s %.1fms",
+        request.method,
+        request.url.path,
+        response.status_code,
+        ms,
+    )
+    return response
 
 
 @app.get("/health", response_model=HealthResponse)
@@ -160,10 +253,11 @@ async def workspace_rag_query(
     if not auth:
         return JSONResponse(status_code=401, content={"detail": "Missing authorization"})
 
+    http = request.app.state.http
     r_base = settings.retrieval_service_url.rstrip("/")
     l_base = settings.llm_service_url.rstrip("/")
     try:
-        sr = await request.app.state.http.post(
+        sr = await http.post(
             f"{r_base}/v1/workspaces/{workspace_id}/search",
             json={"query": body.query, "top_k": body.top_k},
             headers={"Authorization": auth},
@@ -184,6 +278,7 @@ async def workspace_rag_query(
     search_data = sr.json()
     chunks = search_data.get("chunks") or []
     if not chunks:
+        await _record_query_event(http, workspace_id, auth)
         return WorkspaceQueryResponse(
             answer=(
                 "No indexed chunks were found for this workspace yet. "
@@ -200,7 +295,7 @@ async def workspace_rag_query(
             dist_by_chunk[str(cid)] = float(c["distance"])
 
     try:
-        lr = await request.app.state.http.post(
+        lr = await http.post(
             f"{l_base}/v1/rag/complete",
             json={"question": body.query, "contexts": chunks},
         )
@@ -238,6 +333,7 @@ async def workspace_rag_query(
         except (KeyError, TypeError, ValueError):
             continue
 
+    await _record_query_event(http, workspace_id, auth)
     return WorkspaceQueryResponse(
         answer=str(out.get("answer", "")),
         citations=citations,

@@ -16,19 +16,19 @@ Public HTTP entry (via NGINX): **`/api/*`** → **gateway service** (prefix stri
 | POST | `/v1/workspaces` | Auth | Create workspace (caller = owner) |
 | GET | `/v1/workspaces/{id}` | Auth | Workspace detail if member |
 | GET | `/v1/workspaces/{id}/documents` | Ingestion (via gateway) | List documents in workspace |
-| GET | `/v1/workspaces/{id}/documents/stats` | Ingestion (via gateway) | Workspace document aggregates (`indexed_count`, `processing_count`; `queries_24h` reserved) |
+| GET | `/v1/workspaces/{id}/documents/stats` | Ingestion (via gateway) | Workspace document aggregates (`indexed_count`, `processing_count`, `queries_24h` rolling 24h) |
 | POST | `/v1/workspaces/{id}/documents` | Ingestion (via gateway) | Multipart upload (`file` field); allowed types: PDF + text-friendly formats (see ingestion); enqueues Redis job |
 | GET | `/v1/workspaces/{id}/documents/{document_id}` | Ingestion (via gateway) | Document metadata |
 | GET | `/v1/workspaces/{id}/documents/{document_id}/file` | Ingestion (via gateway) | Stream original bytes (`Content-Disposition: inline`; member only) |
 | DELETE | `/v1/workspaces/{id}/documents/{document_id}` | Ingestion (via gateway) | Remove row + stored file (member only) |
 | POST | `/v1/workspaces/{id}/query` | **Gateway** (native route) | RAG: retrieval search + LLM; JSON body `{ "query", "top_k?" }` → `{ answer, citations[], chunks_retrieved }` (Bearer JWT) |
 
-**Internal (not for browsers directly):** **`POST /v1/workspaces/{id}/search`** on **retrieval-service** (gateway forwards JWT). **`POST /v1/rag/complete`** on **llm-service** (gateway only, Docker network).
+**Internal (not for browsers directly):** **`POST /v1/workspaces/{id}/search`** on **retrieval-service** (gateway forwards JWT). **`POST /v1/rag/complete`** on **llm-service** (gateway only, Docker network). **`POST /v1/workspaces/{id}/documents/query-events`** on **ingestion** (gateway calls after a successful RAG response to increment analytics; same JWT).
 
 **Internal data (Milestone 4):** Postgres **`document_chunks`** holds chunk text and **`pgvector`** embeddings; **Milestone 5** reads them via retrieval-service.
 
 ## Planned (later milestones)
 
-- **Query analytics** (e.g. **`queries_24h`**) and optional **streaming** answers  
+- Optional **streaming** answers and **reranking**  
 
 OpenAPI: hit **`/docs`** on each service’s **direct** port during development; the gateway **proxies** paths to auth and ingestion without merging OpenAPI.

@@ -30,7 +30,7 @@ export type WorkspaceOut = {
 export type WorkspaceDocumentStatsOut = {
   indexed_count: number;
   processing_count: number;
-  /** When null, the API does not track query volume yet. */
+  /** Rolling count of completed queries in the last 24 hours for this workspace. */
   queries_24h: number | null;
 };
 
