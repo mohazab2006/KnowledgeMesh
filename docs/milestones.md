@@ -10,7 +10,7 @@
 | 5 | Retrieval + RAG query flow | **Complete** | Retrieval pgvector search + LLM JSON citations; gateway **`POST .../query`**; Query UI wired |
 | 6 | UX polish + performance | **Complete** | PageHeader + skeletons; retry/error banners; sidebar icons; card/page chrome; query loading overlay; documents refresh |
 | 7 | Infra polish + docs | **Complete** | Compose health-gated startup; NGINX + `.env.example` + how-to-run; README/architecture/repo docs aligned |
-| 8 | Optional advanced | Backlog | Streaming, reranking, Ollama, admin, deeper hardening (showcase product otherwise complete) |
+| 8 | Advanced RAG + ops | **Complete** | MMR reranking (retrieval); SSE **`POST .../query/stream`** + OpenAI token streaming; optional **Ollama** LLM provider; authenticated **`GET /v1/diagnostics`**; Compose **`ollama` profile**; NGINX **`proxy_buffering off`** for `/api/` |
 
 ## Milestone 0 — decisions
 
@@ -71,3 +71,10 @@
 - **Compose** uses a shared **`x-fastapi-healthcheck`** anchor (**`urllib.request`** to **`/health`**) on Python services plus **Node `fetch`** on **frontend** and **`wget`** on **NGINX**; **gateway** / **frontend** / **nginx** use **`depends_on: condition: service_healthy`** to reduce cold **502**s.  
 - **Service order** in the compose file follows dependency layers (data → core APIs → worker parallel to gateway chain → edge).  
 - **Documentation:** root **README** is the recruiter-facing product summary; **`.env.example`** and **`docs/how-to-run.md`** carry operator detail; **`infra/nginx/nginx.conf`** documents routing and upload size inline.
+
+## Milestone 8 — decisions
+
+- **MMR** runs in **retrieval-service** over a widened candidate pool (**`embedding::text`** parse + cosine similarity); toggled per request via **`use_mmr`** or defaults from **`MMR_*`** env.  
+- **Streaming:** **llm-service** exposes **`POST /v1/rag/complete/stream`** (**SSE**); **gateway** **`POST /v1/workspaces/{id}/query/stream`** injects a leading **`meta`** event (**`chunks_retrieved`**) then proxies LLM bytes; rate limit applies to both query routes. **OpenAI** streams **`json_object`** deltas; **Ollama** uses completion-then-chunked **delta** replay for a similar UX.  
+- **Diagnostics:** **`GET /v1/diagnostics`** validates **JWT** via **`GET /v1/auth/me`**, then probes **`/health`** on auth, ingestion, retrieval, llm, and optional **worker** (**`WORKER_SERVICE_URL`**).  
+- **Local LLM:** Compose **`ollama`** service under **`--profile ollama`**; **llm-service** **`LLM_PROVIDER=ollama`** with **`OLLAMA_BASE_URL`** / **`OLLAMA_MODEL`** (query embeddings stay **OpenAI**).

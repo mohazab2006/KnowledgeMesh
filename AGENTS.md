@@ -2,7 +2,7 @@
 
 ## Status
 
-**Showcase product is complete** — full RAG path, multi-service layout, Compose, docs. Further work is **optional backlog** (see [`docs/milestones.md`](docs/milestones.md)), not required for a credible demo.
+**Showcase product is feature-complete through Milestone 8** (streaming, MMR, optional Ollama, diagnostics). Treat further work as optional hardening or product iteration unless the user reopens scope—see [`docs/milestones.md`](docs/milestones.md).
 
 ## Rules
 
@@ -10,6 +10,6 @@
 - Keep **service boundaries** honest (no collapsing into one monolith for convenience).
 - After substantive changes: review diffs, update docs if behavior changed, **one clear commit**, **push to `main`**.
 
-## Backlog (pick if needed)
+## Optional follow-ups
 
-Streaming answers, reranking, optional local LLM (e.g. Ollama), admin, stronger DB roles per service—see Milestone 8 in **`docs/milestones.md`**.
+Stronger DB roles per service, distributed rate limiting, cross-encoder reranking, richer admin RBAC—only if the user asks.

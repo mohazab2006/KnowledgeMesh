@@ -49,6 +49,16 @@ export type QueryResponse = {
   chunks_retrieved: number;
 };
 
+export type ServiceProbe = {
+  name: string;
+  ok: boolean;
+  detail: string | null;
+};
+
+export type DiagnosticsResponse = {
+  services: ServiceProbe[];
+};
+
 export type DocumentOut = {
   id: string;
   workspace_id: string;

@@ -19,7 +19,7 @@ A **multi-service RAG platform**: a **gateway** orchestrates **auth**, **ingesti
 | **Web** | Next.js (App Router), React, TypeScript, Tailwind |
 | **APIs** | Python, FastAPI, Pydantic, httpx |
 | **Data** | PostgreSQL 16, **pgvector**, Redis |
-| **AI** | OpenAI (embeddings + chat completions) |
+| **AI** | OpenAI (embeddings + chat); optional **Ollama** for chat via **`LLM_PROVIDER`** |
 | **Delivery** | Docker Compose, NGINX |
 
 ## What’s implemented
@@ -27,9 +27,9 @@ A **multi-service RAG platform**: a **gateway** orchestrates **auth**, **ingesti
 - **Identity & workspaces** — JWT auth, workspace membership, isolated libraries  
 - **Documents** — upload, pipeline status, preview  
 - **Ingestion** — async **Redis** queue; worker **extract → chunk → embed**  
-- **Query** — semantic search + **citation-backed** answers  
+- **Query** — semantic search + **citation-backed** answers; optional **MMR** reranking; **SSE streaming** path  
 - **Dashboard** — indexed/processing counts + **queries in the last 24h**  
-- **Ops-shaped** — gateway **rate limit** on expensive query paths, access logging, Compose health ordering  
+- **Ops-shaped** — gateway **rate limit** on query + **query/stream**, access logging, Compose health ordering, **diagnostics** API + UI  
 
 
 ## Go deeper

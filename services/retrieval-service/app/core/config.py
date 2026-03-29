@@ -15,8 +15,12 @@ class Settings(BaseSettings):
     embedding_model: str = "text-embedding-3-small"
     embedding_dimensions: int = 1536
     default_top_k: int = 8
-    max_top_k: int = 16
+    max_top_k: int = 32
     max_chunk_chars: int = 3000
+    mmr_enabled: bool = True
+    mmr_candidate_multiplier: int = 4
+    mmr_lambda: float = 0.55
+    mmr_max_candidates: int = 48
 
 
 settings = Settings()

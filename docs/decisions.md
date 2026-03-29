@@ -111,5 +111,13 @@ Format: short ADR-style entries. New decisions are appended with a date.
 ### ADR-014 — Query analytics + gateway limits (Milestone 8 slice) (2026-03-28)
 
 **Context:** Dashboard **`queries_24h`** was a placeholder; abuse of **`POST .../query`** could spike cost.  
-**Decision:** **ingestion-service** owns append-only **`workspace_query_events`**; **`GET .../documents/stats`** counts rows in the last 24h. **Gateway** calls **`POST .../documents/query-events`** after each successful RAG response (including empty-chunk “no data” answers) and applies a **per-IP sliding-window** rate limit on **`POST .../query`** only (**`QUERY_RATE_LIMIT_PER_MINUTE`**, default 30). Request logging uses **`gateway.access`** at **INFO** (method, path, status, duration).  
+**Decision:** **ingestion-service** owns append-only **`workspace_query_events`**; **`GET .../documents/stats`** counts rows in the last 24h. **Gateway** calls **`POST .../documents/query-events`** after each successful RAG response (including empty-chunk “no data” answers) and applies a **per-IP sliding-window** rate limit on **`POST .../query`** and **`POST .../query/stream`** (**`QUERY_RATE_LIMIT_PER_MINUTE`**, default 30). Request logging uses **`gateway.access`** at **INFO** (method, path, status, duration).  
 **Consequences:** Analytics require gateway → ingestion path; failed upstream calls are not logged as queries. Rate limits are in-memory (single gateway replica assumption for Compose).
+
+---
+
+### ADR-015 — Streaming, MMR, optional Ollama, diagnostics UI (Milestone 8) (2026-03-28)
+
+**Context:** The core RAG path was complete; we wanted optional depth for demos without collapsing service boundaries.  
+**Decision:** **MMR** reranking lives in **retrieval-service** (widen **`LIMIT`**, parse **`embedding::text`**, re-rank in-process). **SSE** streaming is implemented end-to-end (**llm-service** stream endpoint, **gateway** **`query/stream`** with a synthetic **`meta`** event for **`chunks_retrieved`**, **Next.js** **`fetch` + `ReadableStream`** parser). **LLM provider** is env-selected (**OpenAI** vs **Ollama**); embeddings and query vectors remain **OpenAI** when using Ollama for chat. **Authenticated diagnostics** aggregate **`/health`** from configured upstreams. **NGINX** disables **`proxy_buffering`** for **`/api/`** so SSE is not coalesced.  
+**Consequences:** Ollama adds operational moving parts (**Compose profile**); streaming **`json_object`** parsing depends on a complete final buffer (failures surface as **`error`** events). MMR pulls larger embedding payloads per query (latency vs diversity tradeoff).

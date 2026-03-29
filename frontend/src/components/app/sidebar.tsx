@@ -6,6 +6,7 @@ import { appNav } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 import {
   IconDashboard,
+  IconDiagnostics,
   IconDocuments,
   IconPlusWorkspace,
   IconQuery,
@@ -18,6 +19,7 @@ const NAV_ICONS = {
   "/dashboard": IconDashboard,
   "/documents": IconDocuments,
   "/query": IconQuery,
+  "/admin": IconDiagnostics,
 } as const;
 
 type SidebarProps = {

@@ -18,7 +18,7 @@ The repository is a **monorepo**: one Git history, multiple deployable units. Py
 - **Gateway → auth service** for **`/v1/auth/*`** and **`/v1/workspaces/*`** except the **documents** subtree (HTTP reverse proxy).  
 - **Gateway → ingestion service** for **`/v1/workspaces/{id}/documents`** (list, upload, detail); same JWT and membership rules as other workspace APIs.  
 - **Gateway → retrieval-service** for **`POST /v1/workspaces/{id}/search`** (internal; user-facing **`POST /v1/workspaces/{id}/query`** orchestrates retrieval then LLM).  
-- **Gateway → llm-service** for **`POST /v1/rag/complete`** (internal; trust boundary is the Docker network).  
+- **Gateway → llm-service** for **`POST /v1/rag/complete`** and **`POST /v1/rag/complete/stream`** (internal; trust boundary is the Docker network).  
 - **Local dev:** `next dev` rewrites **`/api/*`** to the gateway so the UI can use relative `/api` URLs without CORS.  
 
 ## Data stores
@@ -31,7 +31,7 @@ The repository is a **monorepo**: one Git history, multiple deployable units. Py
 ## Service communication
 
 - **Synchronous HTTP** from gateway to backend services for request/response paths.  
-- **RAG query:** gateway calls **retrieval** (query embedding + pgvector similarity over **`document_chunks`**, JWT forwarded) then **llm** (chat completion with JSON **`answer`** + **`cited_indices`**), merges **citation metadata** for the client.  
+- **RAG query:** gateway calls **retrieval** (query embedding + pgvector similarity over **`document_chunks`**, optional **MMR** rerank, JWT forwarded) then **llm** (chat completion with JSON **`answer`** + **`cited_indices`**, or **SSE** stream with the same contract at end), merges **citation metadata** for the client. **NGINX** disables **`proxy_buffering`** on **`/api/`** so **SSE** reaches browsers promptly.  
 - **Asynchronous** ingestion via **Redis** (`LPUSH` in ingestion, **`BRPOP`** in worker): worker reads files from shared **`UPLOAD_DIR`**, writes **`document_chunks`** with **`pgvector`** embeddings (`text-embedding-3-small`, 1536-d), updates **`documents.status`**.  
 - **No shared in-memory state** between API replicas; coordination goes through Postgres/Redis.  
 

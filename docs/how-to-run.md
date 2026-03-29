@@ -45,6 +45,12 @@ Compose waits for **Postgres**, **Redis**, and each **FastAPI** service to pass 
 
 Override with the `*_PORT` variables in `.env`.
 
+## Optional: Ollama as chat backend
+
+1. Start the sidecar: `docker compose --profile ollama up -d ollama`
+2. Pull a model inside the container (example): `docker exec -it <ollama_container_id> ollama pull llama3.2`
+3. Set **`LLM_PROVIDER=ollama`**, **`OLLAMA_BASE_URL`** (Compose default targets **`http://ollama:11434`** from **llm-service**), and **`OLLAMA_MODEL`** to match the pull. **OpenAI** is still required for **embeddings** and **query vectors** unless you change ingestion/retrieval separately.
+
 ## Stop and reset
 
 - **Stop:** `docker compose down`

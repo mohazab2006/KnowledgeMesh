@@ -74,6 +74,9 @@ services:
     environment:
       ENVIRONMENT: ${ENVIRONMENT:-development}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      LLM_PROVIDER: ${LLM_PROVIDER:-openai}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2}
     ports:
       - "${LLM_SERVICE_PORT:-8004}:8000"
     healthcheck:
@@ -91,6 +94,9 @@ services:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env (long random string)}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      MMR_ENABLED: ${MMR_ENABLED:-true}
+      MMR_LAMBDA: ${MMR_LAMBDA:-0.55}
+      MMR_MAX_CANDIDATES: ${MMR_MAX_CANDIDATES:-48}
     ports:
       - "${RETRIEVAL_SERVICE_PORT:-8003}:8000"
     healthcheck:
@@ -160,6 +166,7 @@ services:
       INGESTION_SERVICE_URL: http://ingestion-service:8000
       RETRIEVAL_SERVICE_URL: http://retrieval-service:8000
       LLM_SERVICE_URL: http://llm-service:8000
+      WORKER_SERVICE_URL: http://worker-service:8000
       QUERY_RATE_LIMIT_PER_MINUTE: ${QUERY_RATE_LIMIT_PER_MINUTE:-30}
     ports:
       - "${GATEWAY_PORT:-8000}:8000"
@@ -225,6 +232,16 @@ services:
       gateway-service:
         condition: service_healthy
 
+  # Optional local LLM: docker compose --profile ollama up -d ollama
+  ollama:
+    profiles: ["ollama"]
+    image: ollama/ollama:latest
+    ports:
+      - "${OLLAMA_HOST_PORT:-11434}:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
 volumes:
   pgdata:
   ingestion_uploads:
+  ollama_data:

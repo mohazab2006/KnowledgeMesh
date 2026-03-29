@@ -7,10 +7,13 @@ from contextlib import asynccontextmanager
 from time import monotonic
 
 import httpx
+import json
+
 from fastapi import FastAPI, Request, Response
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 
 from app.core.config import settings
+from app.schemas.diagnostics import DiagnosticsResponse, ServiceProbeOut
 from app.schemas.query import (
     QueryCitationOut,
     WorkspaceQueryRequest,
@@ -74,11 +77,18 @@ def _is_rag_query_post(request: Request) -> bool:
     if request.method != "POST":
         return False
     parts = request.url.path.strip("/").split("/")
-    return (
-        len(parts) >= 4
-        and parts[0] == "v1"
-        and parts[1] == "workspaces"
-        and parts[-1] == "query"
+    if (
+        len(parts) < 4
+        or parts[0] != "v1"
+        or parts[1] != "workspaces"
+    ):
+        return False
+    if parts[-1] == "query" and len(parts) == 4:
+        return True
+    return bool(
+        len(parts) >= 5
+        and parts[-1] == "stream"
+        and parts[-2] == "query"
     )
 
 
@@ -114,7 +124,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="KnowledgeMesh API Gateway",
-    version="0.5.0",
+    version="0.6.0",
     lifespan=lifespan,
 )
 
@@ -147,6 +157,58 @@ async def access_log_and_rate_limit(request: Request, call_next):
 @app.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
     return HealthResponse(service=settings.service_name)
+
+
+@app.get("/v1/diagnostics", response_model=DiagnosticsResponse)
+async def diagnostics(request: Request) -> DiagnosticsResponse | JSONResponse:
+    auth = request.headers.get("authorization") or request.headers.get(
+        "Authorization",
+    )
+    if not auth:
+        return JSONResponse(status_code=401, content={"detail": "Missing authorization"})
+    http = request.app.state.http
+    a_base = settings.auth_service_url.rstrip("/")
+    try:
+        me = await http.get(
+            f"{a_base}/v1/auth/me",
+            headers={"Authorization": auth},
+            timeout=10.0,
+        )
+    except httpx.RequestError as exc:
+        return JSONResponse(
+            status_code=502,
+            content={"detail": f"Auth service unreachable: {exc!s}"},
+        )
+    if me.status_code != 200:
+        return JSONResponse(status_code=401, content={"detail": "Invalid or expired token"})
+
+    services: list[tuple[str, str]] = [
+        ("auth", f"{a_base}/health"),
+        (
+            "ingestion",
+            f"{settings.ingestion_service_url.rstrip('/')}/health",
+        ),
+        (
+            "retrieval",
+            f"{settings.retrieval_service_url.rstrip('/')}/health",
+        ),
+        ("llm", f"{settings.llm_service_url.rstrip('/')}/health"),
+    ]
+    wurl = settings.worker_service_url.strip()
+    if wurl:
+        services.append(("worker", f"{wurl.rstrip('/')}/health"))
+
+    out: list[ServiceProbeOut] = []
+    for name, url in services:
+        try:
+            r = await http.get(url, timeout=5.0)
+            ok = r.status_code == 200
+            detail = None if ok else (r.text or "")[:240]
+            out.append(ServiceProbeOut(name=name, ok=ok, detail=detail))
+        except httpx.RequestError as exc:
+            out.append(ServiceProbeOut(name=name, ok=False, detail=str(exc)))
+
+    return DiagnosticsResponse(services=out)
 
 
 async def _forward(
@@ -259,7 +321,11 @@ async def workspace_rag_query(
     try:
         sr = await http.post(
             f"{r_base}/v1/workspaces/{workspace_id}/search",
-            json={"query": body.query, "top_k": body.top_k},
+            json={
+                "query": body.query,
+                "top_k": body.top_k,
+                "use_mmr": body.use_mmr,
+            },
             headers={"Authorization": auth},
         )
     except httpx.RequestError as exc:
@@ -338,6 +404,134 @@ async def workspace_rag_query(
         answer=str(out.get("answer", "")),
         citations=citations,
         chunks_retrieved=len(chunks),
+    )
+
+
+@app.post("/v1/workspaces/{workspace_id}/query/stream")
+async def workspace_rag_query_stream(
+    workspace_id: str,
+    body: WorkspaceQueryRequest,
+    request: Request,
+) -> StreamingResponse | JSONResponse:
+    auth = request.headers.get("authorization") or request.headers.get(
+        "Authorization",
+    )
+    if not auth:
+        return JSONResponse(status_code=401, content={"detail": "Missing authorization"})
+
+    http = request.app.state.http
+    r_base = settings.retrieval_service_url.rstrip("/")
+    l_base = settings.llm_service_url.rstrip("/")
+
+    try:
+        sr = await http.post(
+            f"{r_base}/v1/workspaces/{workspace_id}/search",
+            json={
+                "query": body.query,
+                "top_k": body.top_k,
+                "use_mmr": body.use_mmr,
+            },
+            headers={"Authorization": auth},
+        )
+    except httpx.RequestError as exc:
+        return JSONResponse(
+            status_code=502,
+            content={"detail": f"Retrieval service unreachable: {exc!s}"},
+        )
+
+    if sr.status_code != 200:
+        try:
+            payload = sr.json()
+        except Exception:
+            payload = {"detail": (sr.text or "")[:500] or "Upstream error"}
+        return JSONResponse(status_code=sr.status_code, content=payload)
+
+    search_data = sr.json()
+    chunks = search_data.get("chunks") or []
+
+    async def sse_gen():
+        try:
+            if not chunks:
+                yield (
+                    "data: "
+                    + json.dumps({"type": "meta", "chunks_retrieved": 0}, default=str)
+                    + "\n\n"
+                )
+                yield (
+                    "data: "
+                    + json.dumps(
+                        {
+                            "type": "done",
+                            "answer": (
+                                "No indexed chunks were found for this workspace yet. "
+                                "Upload and index documents first."
+                            ),
+                            "citations": [],
+                        },
+                        default=str,
+                    )
+                    + "\n\n"
+                )
+                return
+            try:
+                async with http.stream(
+                    "POST",
+                    f"{l_base}/v1/rag/complete/stream",
+                    json={"question": body.query, "contexts": chunks},
+                ) as lr:
+                    if lr.status_code != 200:
+                        err_body = await lr.aread()
+                        try:
+                            payload = json.loads(err_body.decode())
+                            det = payload.get("detail", lr.text)
+                            if not isinstance(det, str):
+                                det = str(det)
+                        except Exception:
+                            det = (
+                                err_body.decode(errors="replace") or lr.text or ""
+                            )[:500]
+                        yield (
+                            "data: "
+                            + json.dumps({"type": "error", "detail": det}, default=str)
+                            + "\n\n"
+                        )
+                        return
+                    yield (
+                        "data: "
+                        + json.dumps(
+                            {
+                                "type": "meta",
+                                "chunks_retrieved": len(chunks),
+                            },
+                            default=str,
+                        )
+                        + "\n\n"
+                    )
+                    async for part in lr.aiter_bytes():
+                        yield part
+            except httpx.RequestError as exc:
+                yield (
+                    "data: "
+                    + json.dumps(
+                        {
+                            "type": "error",
+                            "detail": f"LLM service unreachable: {exc!s}",
+                        },
+                        default=str,
+                    )
+                    + "\n\n"
+                )
+        finally:
+            await _record_query_event(http, workspace_id, auth)
+
+    return StreamingResponse(
+        sse_gen(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
     )
 
 

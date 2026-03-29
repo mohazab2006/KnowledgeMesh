@@ -57,6 +57,26 @@ export function IconQuery({ className }: { className?: string }) {
   );
 }
 
+export function IconDiagnostics({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M12 20v-4" />
+      <path d="M6 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
+      <path d="M9 10a3 3 0 1 0 6 0 3 3 0 0 0-6 0Z" />
+      <path d="M4 10h2M18 10h2M12 4v2" />
+    </svg>
+  );
+}
+
 export function IconPlusWorkspace({ className }: { className?: string }) {
   return (
     <svg
