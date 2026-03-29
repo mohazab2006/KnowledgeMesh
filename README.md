@@ -2,44 +2,47 @@
 
 **Your documents. One place to ask. Answers you can prove.**
 
-## Problem
+## The problem
 
-Teams store knowledge in PDFs, specs, and policies, but **finding an answer** means search keywords and opening many files. KnowledgeMesh is a **workspace-scoped knowledge platform**: upload documents, wait for **background indexing**, then ask in **natural language** and get answers **grounded in retrieved chunks** with **citations**—not free-form hallucination.
+Team knowledge lives in PDFs, specs, and policies, but **getting an answer** still means guessing keywords and opening file after file. KnowledgeMesh is a **workspace-scoped** knowledge product: upload content, let it **index in the background**, then **ask in natural language** and get responses **tied to real passages**—with **citations**, not unchecked model text.
 
-## Architecture (summary)
+## What you’re looking at
 
-**Edge:** NGINX on **`HTTP_PORT`** (default **8080**) terminates browser traffic: **`/`** → Next.js, **`/api/`** → gateway ( **`/api` stripped** so the gateway keeps **`/v1/...`** paths).
+A **multi-service RAG platform** (not a single-process demo): a **gateway** orchestrates **auth**, **ingestion**, **retrieval**, and **LLM** services. **PostgreSQL + pgvector** holds identities, workspaces, documents, and chunk embeddings; **Redis** backs the ingestion queue. A **worker** pulls jobs, extracts text, chunks, embeds, and writes vectors. Queries run **retrieve → generate**: top‑k chunks feed an LLM that returns **JSON** with **`answer`** + **`cited_indices`**; the gateway merges **citation metadata** for the UI.
 
-**Service boundaries:** **auth** (identity, workspaces, JWT), **ingestion** (uploads, metadata, Redis enqueue), **worker** (extract → chunk → embed → **pgvector**), **retrieval** (query embedding + vector search), **llm** (JSON RAG completion with **`cited_indices`**), **gateway** (public API + **orchestrated query**). **Postgres + pgvector** and **Redis** are the shared coordination and persistence layers; **no in-memory singletons** across replicas.
+**Edge:** NGINX serves the **Next.js** app and proxies **`/api/*`** to the gateway (the **`/api`** prefix is stripped so internal routes stay **`/v1/...`**). **Docker Compose** is the reference way to run the full stack, with **health-gated** startup so cold **502**s are rare.
 
-**Methods:** REST over HTTP from browser to gateway; **async work** via Redis list **`km:ingestion:jobs`** (`LPUSH` / **`BRPOP`**). **JWT** (HS256) propagates on workspace-scoped calls.
-
-**RAG flow:** Upload → document row + file on disk → job queued → worker indexes chunks → user **`POST .../query`** → gateway → retrieval (top‑k chunks) → llm (answer + citations) → merged response.
-
-**Distributed systems:** **Health-gated startup** in Compose (each FastAPI service **`GET /health`** before gateway/frontend/NGINX) reduces cold 502s; **volumes** isolate durable state (**`pgdata`**, **`ingestion_uploads`**); services scale independently in principle (single-machine Compose is the reference deployment).
-
-## Tech stack
+## Stack
 
 | Layer | Technologies |
 |--------|----------------|
-| **Web app** | Next.js (App Router), React, TypeScript, Tailwind CSS |
-| **APIs** | Python, FastAPI |
-| **Data** | PostgreSQL 16 + pgvector, Redis |
+| **Web** | Next.js (App Router), React, TypeScript, Tailwind |
+| **APIs** | Python, FastAPI, Pydantic, httpx |
+| **Data** | PostgreSQL 16, **pgvector**, Redis |
+| **AI** | OpenAI (embeddings + chat completions) |
 | **Delivery** | Docker Compose, NGINX |
-| **AI** | OpenAI API (embeddings + chat) |
 
-## Key features (shipped)
+## What’s implemented
 
-Citation-oriented **RAG** query path, **async ingestion** with status, **workspace isolation**, **premium minimal UI** (app shell, loading/error patterns). Milestone tracker: [`docs/milestones.md`](docs/milestones.md).
+- **Identity & workspaces** — JWT auth, workspace membership, isolated libraries  
+- **Documents** — upload, pipeline status, preview  
+- **Ingestion** — async **Redis** queue; worker **extract → chunk → embed**  
+- **Query** — semantic search + **citation-backed** answers  
+- **Dashboard** — indexed/processing counts + **queries in the last 24h**  
+- **Ops-shaped** — gateway **rate limit** on expensive query paths, access logging, Compose health ordering  
 
-## Future improvements
+## Scope (intentional)
 
-Streaming answers, reranking, optional local LLMs (e.g. Ollama), query analytics, stronger per-service DB roles, and managed-vector-store options—see **Milestone 8** in [`docs/milestones.md`](docs/milestones.md).
+This repo is a **strong portfolio / demo** of RAG architecture and service boundaries—not a full SaaS. **Optional** follow-ups (streaming, reranking, local LLMs, admin, etc.) are tracked in [`docs/milestones.md`](docs/milestones.md), not implied as shipped.
 
-## Engineers: go deeper
+## Go deeper
 
-- [`docs/how-to-run.md`](docs/how-to-run.md) — Docker Compose, ports, troubleshooting  
-- [`docs/architecture.md`](docs/architecture.md) — request paths, data stores, security notes  
-- [`docs/repository-structure.md`](docs/repository-structure.md) — repo map, RAG sequence diagram  
-- [`docs/api-overview.md`](docs/api-overview.md) — HTTP surface  
-- [`docs/decisions.md`](docs/decisions.md) — ADRs  
+| Doc | Purpose |
+|-----|---------|
+| [`docs/how-to-run.md`](docs/how-to-run.md) | Run with Docker Compose |
+| [`docs/architecture.md`](docs/architecture.md) | Paths, stores, security notes |
+| [`docs/repository-structure.md`](docs/repository-structure.md) | Repo map, RAG sequence |
+| [`docs/api-overview.md`](docs/api-overview.md) | HTTP surface |
+| [`docs/decisions.md`](docs/decisions.md) | ADRs |
+
+Cursor / automation context: [`AGENTS.md`](AGENTS.md).

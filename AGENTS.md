@@ -1,28 +1,15 @@
 # KnowledgeMesh — agent brief
 
-## Current milestone
+## Status
 
-**MILESTONE 8 — Optional advanced** (backlog / pick items as needed)
+**Showcase product is complete** — full RAG path, multi-service layout, Compose, docs. Further work is **optional backlog** (see [`docs/milestones.md`](docs/milestones.md)), not required for a credible demo.
 
-Milestone 7 is **done**: **Compose** health-gated startup (**`x-fastapi-healthcheck`**, frontend + NGINX probes, **`depends_on: service_healthy`**); **`infra/nginx/nginx.conf`** documented; **`.env.example`** and **`docs/how-to-run.md`** tightened; **README**, **`docs/architecture.md`**, **`docs/repository-structure.md`**, **`docs/api-overview.md`** aligned for showcase review.
+## Rules
 
-Milestone 6 is **done**: **PageHeader**, **Skeleton**, loading/error patterns, sidebar polish, query overlay.
+- Root [**`README.md`**](README.md) is the recruiter-facing overview; deeper detail lives in **`docs/`**.
+- Keep **service boundaries** honest (no collapsing into one monolith for convenience).
+- After substantive changes: review diffs, update docs if behavior changed, **one clear commit**, **push to `main`**.
 
-Milestone 5 is **done**: gateway **`POST /v1/workspaces/{id}/query`**, retrieval + LLM, Query UI.
+## Backlog (pick if needed)
 
-## M8 direction (when you choose to implement)
-
-- Streaming answers, reranking, optional **Ollama** / local LLM path  
-- Admin surfaces, stronger **DB least-privilege** per service  
-
-**Shipped (slice):** **`queries_24h`** from **`workspace_query_events`**; gateway **query rate limit** + access log; **auth layout** aligned with marketing (neural background + header).  
-
-## Rules (project)
-
-- README is a **short product + stack** summary; deeper structure is in `docs/repository-structure.md` and `docs/architecture.md`.
-- After **each completed milestone**: review diffs, clean dead code, update docs, **one clear commit**, **push to GitHub**.
-- Do not collapse services into one process; keep boundaries honest.
-
-## When M8 items ship
-
-Update `docs/milestones.md` and this file; summarize, commit, push.
+Streaming answers, reranking, optional local LLM (e.g. Ollama), admin, stronger DB roles per service—see Milestone 8 in **`docs/milestones.md`**.

@@ -14,7 +14,7 @@ export function AppHeader({ title, onMenuClick }: AppHeaderProps) {
   const { active, workspaces, loading, setActiveWorkspace } = useWorkspace();
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-4 border-b border-border bg-background/95 px-4 backdrop-blur supports-backdrop-filter:bg-background/80 md:px-8">
+    <header className="sticky top-0 z-30 flex h-[3.75rem] shrink-0 items-center gap-4 border-b border-border bg-background/95 px-4 backdrop-blur supports-backdrop-filter:bg-background/85 md:px-8">
       <Button
         type="button"
         variant="ghost"
@@ -27,15 +27,15 @@ export function AppHeader({ title, onMenuClick }: AppHeaderProps) {
       </Button>
       <div className="min-w-0 flex-1">
         {title ? (
-          <h1 className="truncate text-sm font-semibold text-foreground md:text-base">
+          <h1 className="truncate text-base font-semibold text-foreground md:text-lg">
             {title}
           </h1>
         ) : (
-          <p className="truncate text-sm font-semibold text-foreground md:text-base">
+          <p className="truncate text-base font-semibold text-foreground md:text-lg">
             {active ? active.name : loading ? "Loading…" : "KnowledgeMesh"}
           </p>
         )}
-        <p className="truncate text-xs text-muted-foreground">
+        <p className="truncate text-sm text-muted-foreground">
           {active ? (
             <>
               <span className="capitalize">{active.role}</span>
@@ -56,7 +56,7 @@ export function AppHeader({ title, onMenuClick }: AppHeaderProps) {
         <select
           id="workspace-select"
           className={cn(
-            "h-9 max-w-[200px] cursor-pointer truncate rounded-lg border border-border/80 bg-card px-3 text-xs font-medium text-foreground",
+            "h-10 max-w-[220px] cursor-pointer truncate rounded-lg border border-border/80 bg-card px-3 text-sm font-medium text-foreground",
             "shadow-sm transition-[box-shadow,border-color] focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
             "disabled:cursor-not-allowed disabled:opacity-50 md:max-w-[240px]",
           )}

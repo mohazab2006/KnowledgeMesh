@@ -56,7 +56,7 @@ Format: short ADR-style entries. New decisions are appended with a date.
 
 **Context:** Secret scanners (e.g. GitGuardian) flag **default passwords** and **JWT placeholders** committed in `docker-compose.yml`, `.env.example`, or Python defaults.  
 **Decision:** Require **`POSTGRES_*`**, **`JWT_SECRET`**, and **`DATABASE_URL`** via a **local `.env`** (gitignored). Compose uses `${VAR:?message}` where substitution is needed; **`.env.example` uses empty values** and comments only. Auth **Settings** has **no default** for `database_url` or `jwt_secret`.  
-**Consequences:** `docker compose up` fails until `.env` exists; developers copy `.env.example` and fill secrets. **If secrets were ever pushed, rotate them** and consider **history rewrite** (`git filter-repo` / BFG) because scanners and clones may still see old commits. Procedure notes: [`git-history-secret-scrub.md`](git-history-secret-scrub.md).
+**Consequences:** `docker compose up` fails until `.env` exists; developers copy `.env.example` and fill secrets. **If secrets were ever pushed, rotate them** and consider **history rewrite** (`git filter-repo` / BFG) because scanners and clones may still see old commits. See troubleshooting in [`how-to-run.md`](how-to-run.md).
 
 ---
 

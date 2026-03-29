@@ -10,7 +10,7 @@
 | 5 | Retrieval + RAG query flow | **Complete** | Retrieval pgvector search + LLM JSON citations; gateway **`POST .../query`**; Query UI wired |
 | 6 | UX polish + performance | **Complete** | PageHeader + skeletons; retry/error banners; sidebar icons; card/page chrome; query loading overlay; documents refresh |
 | 7 | Infra polish + docs | **Complete** | Compose health-gated startup; NGINX + `.env.example` + how-to-run; README/architecture/repo docs aligned |
-| 8 | Optional advanced | Backlog | Streaming, reranking, Ollama, analytics, admin |
+| 8 | Optional advanced | Backlog | Streaming, reranking, Ollama, admin, deeper hardening (showcase product otherwise complete) |
 
 ## Milestone 0 — decisions
 
@@ -51,7 +51,7 @@
 
 ## Next up
 
-**Milestone 8:** Optional advanced backlog (streaming, reranking, Ollama, analytics, admin).
+**Milestone 8 (optional):** streaming, reranking, Ollama, admin, deeper hardening. The **showcase / recruiter demo** scope for the core product is **complete**—see root **`README.md`**.
 
 ## Milestone 5 — decisions
 

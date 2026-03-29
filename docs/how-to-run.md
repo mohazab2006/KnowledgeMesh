@@ -55,6 +55,7 @@ Override with the `*_PORT` variables in `.env`.
 - **`dependency failed to start`:** Check `docker compose logs <service>` — usually Postgres credentials or a missing required `.env` field.
 - **Uploads fail with 413:** NGINX allows **100m** on `/api/`; raise `client_max_body_size` in `infra/nginx/nginx.conf` if you need larger files.
 - **Documents stuck queued:** Ensure **worker-service** is up and **`OPENAI_API_KEY`** is set.
+- **Secrets ever committed to Git:** Deleting them in the latest commit is not enough—use history rewriting (e.g. `git filter-repo`), **rotate** every leaked credential, and **force-push** only after coordinating with anyone who cloned the repo.
 
 ## Local frontend dev (without Docker for Next)
 
