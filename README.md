@@ -31,9 +31,6 @@ A **multi-service RAG platform**: a **gateway** orchestrates **auth**, **ingesti
 - **Dashboard** — indexed/processing counts + **queries in the last 24h**  
 - **Ops-shaped** — gateway **rate limit** on expensive query paths, access logging, Compose health ordering  
 
-## Scope (intentional)
-
-This repo is a **strong portfolio / demo** of RAG architecture and service boundaries—not a full SaaS. **Optional** follow-ups (streaming, reranking, local LLMs, admin, etc.) are tracked in [`docs/milestones.md`](docs/milestones.md), not implied as shipped.
 
 ## Go deeper
 
