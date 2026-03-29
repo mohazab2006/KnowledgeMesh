@@ -1,5 +1,7 @@
 # KnowledgeMesh
 
+<img src="docs/assets/hero.jpg" alt="KnowledgeMesh" width="640" />
+
 **Your documents. One place to ask. Answers you can prove.**
 
 ## The problem
