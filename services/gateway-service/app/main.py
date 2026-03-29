@@ -407,7 +407,10 @@ async def workspace_rag_query(
     )
 
 
-@app.post("/v1/workspaces/{workspace_id}/query/stream")
+@app.post(
+    "/v1/workspaces/{workspace_id}/query/stream",
+    response_model=None,
+)
 async def workspace_rag_query_stream(
     workspace_id: str,
     body: WorkspaceQueryRequest,
