@@ -36,8 +36,9 @@ A **multi-service RAG platform**: a **gateway** orchestrates **auth**, **ingesti
 
 | Doc | Purpose |
 |-----|---------|
-| [`docs/how-to-run.md`](docs/how-to-run.md) | Run with Docker Compose |
-| [`docs/architecture.md`](docs/architecture.md) | Paths, stores, security notes |
-| [`docs/repository-structure.md`](docs/repository-structure.md) | Repo map, RAG sequence |
+| [`docs/how-to-run.md`](docs/how-to-run.md) | Docker Compose, ports, Ollama profile |
+| [`docs/architecture.md`](docs/architecture.md) | Request paths, stores, security |
+| [`docs/repository-structure.md`](docs/repository-structure.md) | Directory map, RAG diagram |
 | [`docs/api-overview.md`](docs/api-overview.md) | HTTP surface |
+| [`docs/milestones.md`](docs/milestones.md) | Delivery phases (all complete) |
 | [`docs/decisions.md`](docs/decisions.md) | ADRs |

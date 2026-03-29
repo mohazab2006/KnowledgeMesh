@@ -26,7 +26,7 @@ The repository is a **monorepo**: one Git history, multiple deployable units. Py
 | Store | Role |
 |-------|------|
 | **PostgreSQL + pgvector** | Users, workspaces, documents, chunks, vectors, sessions (evolving schema) |
-| **Redis** | Job queue, short-lived cache for repeated retrievals (optional, milestone-driven) |
+| **Redis** | Ingestion job queue (`LPUSH` / worker `BRPOP`) |
 
 ## Service communication
 
@@ -60,6 +60,6 @@ Then run Uvicorn with working directory `services/gateway-service` and module `a
 - **Internal-only** URLs (**`RETRIEVAL_SERVICE_URL`**, **`LLM_SERVICE_URL`**) are reachable on the Docker network; do not expose them on public interfaces without an additional control plane.  
 - **Least privilege** DB roles per service are a future hardening step for production deployments.  
 
-## Evolution
+## Related docs
 
-This document is updated when milestones add persistence, queue names, OpenAPI surfaces, or change routing. See `docs/decisions.md` for rationale on major forks.
+[`decisions.md`](decisions.md) — ADRs. [`milestones.md`](milestones.md) — delivery phase index.

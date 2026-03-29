@@ -80,7 +80,7 @@ Format: short ADR-style entries. New decisions are appended with a date.
 
 **Context:** Users need a single authenticated workspace query that combines vector retrieval and grounded generation without collapsing services into one binary.  
 **Decision:** **`POST /v1/workspaces/{id}/query`** is implemented **on the gateway**: it forwards **`Authorization`** to **retrieval-service** **`POST .../search`** (OpenAI query embedding + pgvector `<=>` over **`document_chunks`** joined to **`documents`** for titles), then calls **llm-service** **`POST /v1/rag/complete`** with retrieved chunks (no end-user JWT on llm; internal HTTP only). Response merges **relevance distance** from retrieval into citations.  
-**Consequences:** Gateway must start after retrieval and llm in Compose; **`RETRIEVAL_SERVICE_URL`** / **`LLM_SERVICE_URL`** required; query and index embedding **model + dimension** must stay aligned. LLM is not exposed as a public authenticated surface—only the gateway calls it.
+**Consequences:** Gateway must start after retrieval and llm in Compose; **`RETRIEVAL_SERVICE_URL`** / **`LLM_SERVICE_URL`** required; query and index embedding **model + dimension** must stay aligned. LLM is not exposed as a public authenticated surface—only the gateway calls it. **Streaming and MMR** extend this path (see **ADR-015**).
 
 ---
 
@@ -108,7 +108,7 @@ Format: short ADR-style entries. New decisions are appended with a date.
 
 ---
 
-### ADR-014 — Query analytics + gateway limits (Milestone 8 slice) (2026-03-28)
+### ADR-014 — Query analytics + gateway rate limits (2026-03-28)
 
 **Context:** Dashboard **`queries_24h`** was a placeholder; abuse of **`POST .../query`** could spike cost.  
 **Decision:** **ingestion-service** owns append-only **`workspace_query_events`**; **`GET .../documents/stats`** counts rows in the last 24h. **Gateway** calls **`POST .../documents/query-events`** after each successful RAG response (including empty-chunk “no data” answers) and applies a **per-IP sliding-window** rate limit on **`POST .../query`** and **`POST .../query/stream`** (**`QUERY_RATE_LIMIT_PER_MINUTE`**, default 30). Request logging uses **`gateway.access`** at **INFO** (method, path, status, duration).  

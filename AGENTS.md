@@ -2,7 +2,7 @@
 
 ## Status
 
-**Showcase product is feature-complete through Milestone 8** (streaming, MMR, optional Ollama, diagnostics). Treat further work as optional hardening or product iteration unless the user reopens scope—see [`docs/milestones.md`](docs/milestones.md).
+**Showcase product is feature-complete through Milestone 8** (streaming, MMR, optional Ollama, diagnostics). Phase index: [`docs/milestones.md`](docs/milestones.md). Treat further work as optional unless scope reopens.
 
 ## Rules
 

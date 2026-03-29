@@ -65,4 +65,4 @@ Override with the `*_PORT` variables in `.env`.
 
 ## Local frontend dev (without Docker for Next)
 
-Create **`frontend/.env.local`** with `GATEWAY_INTERNAL_URL=http://127.0.0.1:8000` (or your gateway port), run `npm run dev` in `frontend/`, and keep backend services running (Compose or individual Uvicorn processes). See `docs/architecture.md` for `/api` rewrites.
+Create **`frontend/.env.local`** with `GATEWAY_INTERNAL_URL` pointing at your gateway, run `npm run dev` in `frontend/`, and keep backends running. Next.js rewrites **`/api/*`** to that URL (see [`architecture.md`](architecture.md)).

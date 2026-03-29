@@ -27,6 +27,6 @@ Public HTTP entry (via NGINX): **`/api/*`** → **gateway service** (prefix stri
 
 **Internal (not for browsers directly):** **`POST /v1/workspaces/{id}/search`** on **retrieval-service** (gateway forwards JWT). **`POST /v1/rag/complete`** and **`POST /v1/rag/complete/stream`** on **llm-service** (gateway only, Docker network). **`POST /v1/workspaces/{id}/documents/query-events`** on **ingestion** (gateway calls after each query or stream completes; same JWT).
 
-**Internal data (Milestone 4):** Postgres **`document_chunks`** holds chunk text and **`pgvector`** embeddings; **Milestone 5+** reads them via retrieval-service (**MMR** optional in Milestone 8).
+**Data:** Postgres **`document_chunks`** stores text + **`pgvector`** embeddings; **retrieval-service** reads them (optional **MMR** rerank).
 
 OpenAPI: hit **`/docs`** on each service’s **direct** port during development; the gateway **proxies** paths to auth and ingestion without merging OpenAPI.
