@@ -2,45 +2,83 @@
 
 <img src="docs/assets/hero.jpg" alt="KnowledgeMesh" width="640" />
 
+# KnowledgeMesh
+
 **Your documents. One place to ask. Answers you can prove.**
 
-## The problem
+Upload your team's documents, ask questions in plain English, and get answers tied to real source passages — not unchecked model text. Every response includes citations so you can verify exactly where the answer came from.
 
-Team knowledge lives in PDFs, specs, and policies, but **getting an answer** still means guessing keywords and opening file after file. KnowledgeMesh is a **workspace-scoped** knowledge product: upload content, let it **index in the background**, then **ask in natural language** and get responses **tied to real passages**—with **citations**, not unchecked model text.
+---
 
-## What you’re looking at
+## What makes it different
 
-A **multi-service RAG platform**: a **gateway** orchestrates **auth**, **ingestion**, **retrieval**, and **LLM** services. **PostgreSQL + pgvector** holds identities, workspaces, documents, and chunk embeddings; **Redis** backs the ingestion queue. A **worker** pulls jobs, extracts text, chunks, embeds, and writes vectors. Queries run **retrieve → generate**: top‑k chunks feed an LLM that returns **JSON** with **`answer`** + **`cited_indices`**; the gateway merges **citation metadata** for the UI.
+Most RAG tools return an answer and hope you trust it. KnowledgeMesh returns `cited_indices` alongside every response — passage-level references merged by the gateway so the UI can show you the exact source. Answers are provable, not just plausible.
 
-**Edge:** NGINX serves the **Next.js** app and proxies **`/api/*`** to the gateway (the **`/api`** prefix is stripped so internal routes stay **`/v1/...`**). **Docker Compose** is the reference way to run the full stack, with **health-gated** startup so cold **502**s are rare.
+Workspaces are fully isolated. Documents uploaded to one workspace are never retrievable from another — enforced at the query and embedding level, not just the UI.
+
+---
+
+## Architecture
+
+Five services orchestrated by Docker Compose with health-gated startup:
+
+| Service | Role |
+|---|---|
+| **Gateway** | Single entry point — handles auth, rate limiting, request routing |
+| **Ingestion worker** | Pulls from Redis queue, extracts text, chunks, embeds, writes to pgvector |
+| **Retrieval service** | Semantic search with MMR reranking, returns top-k chunks with metadata |
+| **LLM service** | Generates answers with cited_indices, supports OpenAI and Ollama |
+| **Frontend** | Next.js dashboard — documents, streaming queries, diagnostics |
+
+NGINX proxies the frontend and strips `/api` prefixes so internal services stay at `/v1/...`.
+
+---
 
 ## Stack
 
-| Layer | Technologies |
-|--------|----------------|
-| **Web** | Next.js (App Router), React, TypeScript, Tailwind |
-| **APIs** | Python, FastAPI, Pydantic, httpx |
-| **Data** | PostgreSQL 16, **pgvector**, Redis |
-| **AI** | OpenAI (embeddings + chat); optional **Ollama** for chat via **`LLM_PROVIDER`** |
-| **Delivery** | Docker Compose, NGINX |
+| Layer | Tech |
+|---|---|
+| **Web** | Next.js, React, TypeScript, Tailwind CSS |
+| **API** | Python, FastAPI, Pydantic |
+| **Data** | PostgreSQL 16, pgvector, Redis |
+| **AI** | OpenAI (embeddings + chat), Ollama (local chat via `LLM_PROVIDER`) |
+| **Infra** | Docker Compose, NGINX |
 
-## What’s implemented
+---
 
-- **Identity & workspaces** — JWT auth, workspace membership, isolated libraries  
-- **Documents** — upload, pipeline status, preview  
-- **Ingestion** — async **Redis** queue; worker **extract → chunk → embed**  
-- **Query** — semantic search + **citation-backed** answers; optional **MMR** reranking; **SSE streaming** path  
-- **Dashboard** — indexed/processing counts + **queries in the last 24h**  
-- **Ops-shaped** — gateway **rate limit** on query + **query/stream**, access logging, Compose health ordering, **diagnostics** API + UI  
+## Key Technical Decisions
 
+**MMR reranking** — Maximal Marginal Relevance re-orders retrieved chunks to reduce redundancy before passing to the LLM. Better context window utilization, more complete answers.
 
-## Go deeper
+**Hybrid LLM routing** — Switch between OpenAI and a local Ollama model by setting `LLM_PROVIDER`. No code changes needed. Useful for cost control or offline environments.
 
-| Doc | Purpose |
-|-----|---------|
-| [`docs/how-to-run.md`](docs/how-to-run.md) | Docker Compose, ports, Ollama profile |
-| [`docs/architecture.md`](docs/architecture.md) | Request paths, stores, security |
-| [`docs/repository-structure.md`](docs/repository-structure.md) | Directory map, RAG diagram |
-| [`docs/api-overview.md`](docs/api-overview.md) | HTTP surface |
-| [`docs/milestones.md`](docs/milestones.md) | Delivery phases (all complete) |
-| [`docs/decisions.md`](docs/decisions.md) | ADRs |
+**SSE streaming** — Query responses stream token-by-token to the UI. No waiting for the full completion.
+
+**Health-gated startup** — Docker Compose waits for each service to pass health checks before starting dependents. Cold 502s are rare.
+
+**Rate limiting** — Gateway enforces per-IP rate limits on `/query` and `/query/stream` endpoints.
+
+---
+
+## What's built
+
+- JWT auth and workspace membership
+- Document upload, background ingestion status, preview
+- Async Redis ingestion queue with worker pipeline (extract → chunk → embed)
+- Semantic search with citation-backed answers
+- SSE streaming query path
+- Dashboard with indexed document counts and query activity
+- Diagnostics API and UI
+- Access logging
+
+---
+
+## Docs
+
+| File | Contents |
+|---|---|
+| `docs/how-to-run.md` | Docker Compose setup, ports, Ollama profile |
+| `docs/architecture.md` | Request paths, data stores, security model |
+| `docs/repository-structure.md` | Directory map, RAG pipeline diagram |
+| `docs/api-overview.md` | Full HTTP surface |
+| `docs/decisions.md` | Architecture decision records |
